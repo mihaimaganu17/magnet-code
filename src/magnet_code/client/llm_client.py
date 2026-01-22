@@ -58,7 +58,7 @@ class LLMClient:
                 prompt_tokens=response.usage.prompt_tokens,
                 completion_tokens=response.usage.completion_tokens,
                 total_tokens=response.usage.total_tokens,
-                cached_tokens=response.prompt_tokens_details.cached_tokens,
+                cached_tokens=response.usage.prompt_tokens_details.cached_tokens,
             )
 
         return StreamEvent(

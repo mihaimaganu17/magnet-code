@@ -1,4 +1,4 @@
-from __future__ import TokenUsage
+from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
