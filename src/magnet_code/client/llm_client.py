@@ -32,10 +32,11 @@ class LLMClient:
         if stream:
             self._stream_response()
         else:
-            self._non_stream_response(client, kwargs)
+            await self._non_stream_response(client, kwargs)
 
     async def _stream_response(self):
         pass
 
     async def _non_stream_response(self, client: AsyncOpenAI, kwargs: dict[str, Any]):
-        pass
+        response = await client.chat.completions.create(**kwargs)
+        print(response)
