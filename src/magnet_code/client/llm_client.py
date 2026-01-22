@@ -39,4 +39,10 @@ class LLMClient:
 
     async def _non_stream_response(self, client: AsyncOpenAI, kwargs: dict[str, Any]):
         response = await client.chat.completions.create(**kwargs)
-        print(response)
+        # Get the first choice message
+        choice = response.choices[0]
+        message = choice.message
+
+        text = None
+        if message.content:
+            text = 
