@@ -24,7 +24,7 @@ class LLMClient:
             await self._client.close()
             self._client = None
 
-    async def chat_completion(self, messages: list[dict[str, Any]], stream: bool = True) -> AsyncGenerator:
+    async def chat_completion(self, messages: list[dict[str, Any]], stream: bool = True) -> AsyncGenerator[StreamEvent, None]:
         client = self.get_client()
         kwargs = {
             "model": "gpt-5.2",
@@ -36,6 +36,7 @@ class LLMClient:
         else:
             event = await self._non_stream_response(client, kwargs)
             yield event
+        return
 
     async def _stream_response(self):
         pass

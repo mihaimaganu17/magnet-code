@@ -14,6 +14,7 @@ async def main():
             "content": "What's up"
         }
     ]
-    await client.chat_completion(messages, False)
+    async for event in client.chat_completion(messages, False):
+        print(event)
 
 asyncio.run(main())
