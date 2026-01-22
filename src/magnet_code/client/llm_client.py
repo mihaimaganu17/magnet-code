@@ -1,7 +1,9 @@
-from typing import Any
+from typing import Any, AsyncGenerator
 from openai import AsyncOpenAI
 
 import os
+
+from magnet_code.client.response import EventType, StreamEvent, TextDelta, TokenUsage
 
 class LLMClient:
     def __init__(self) -> None:
@@ -22,7 +24,7 @@ class LLMClient:
             await self._client.close()
             self._client = None
 
-    async def chat_completion(self, messages: list[dict[str, Any]], stream: bool = True):
+    async def chat_completion(self, messages: list[dict[str, Any]], stream: bool = True) -> AsyncGenerator:
         client = self.get_client()
         kwargs = {
             "model": "gpt-5.2",
@@ -32,17 +34,35 @@ class LLMClient:
         if stream:
             self._stream_response()
         else:
-            await self._non_stream_response(client, kwargs)
+            event = await self._non_stream_response(client, kwargs)
+            yield event
 
     async def _stream_response(self):
         pass
 
-    async def _non_stream_response(self, client: AsyncOpenAI, kwargs: dict[str, Any]):
+    async def _non_stream_response(self, client: AsyncOpenAI, kwargs: dict[str, Any]) -> StreamEvent:
         response = await client.chat.completions.create(**kwargs)
         # Get the first choice message
         choice = response.choices[0]
         message = choice.message
 
-        text = None
+        # Get the text difference from the response
+        text_delta = None
         if message.content:
-            text = 
+            text_delta = TextDelta(content = message.content)
+
+        usage = None
+        if response.usage:
+            usage = TokenUsage(
+                prompt_tokens=response.usage.prompt_tokens,
+                completion_tokens=response.usage.completion_tokens,
+                total_tokens=response.usage.total_tokens,
+                cached_tokens=response.prompt_tokens_details.cached_tokens,
+            )
+
+        return StreamEvent(
+            type=EventType.MESSAGE_COPLETE,
+            text_delta=text_delta,
+            finish_reason=choice.finish_reason,
+            usage=usage
+        )
