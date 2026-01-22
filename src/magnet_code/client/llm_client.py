@@ -23,13 +23,19 @@ class LLMClient:
             self._client = None
 
     async def chat_completion(self, messages: list[dict[str, Any]], stream: bool = True):
+        client = self.get_client()
+        kwargs = {
+            "model": "gpt-5.2",
+            "messages": messages,
+            "stream": stream
+        }
         if stream:
             self._stream_response()
         else:
-            self._non_stream_response()
+            self._non_stream_response(client, kwargs)
 
     async def _stream_response(self):
         pass
 
-    async def _non_stream_response(self):
+    async def _non_stream_response(self, client: AsyncOpenAI, kwargs: dict[str, Any]):
         pass
