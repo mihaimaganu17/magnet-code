@@ -41,11 +41,11 @@ class Agent:
         async for event in self.client.chat_completion(messages, True):
             # If the stream event is a text delta
             if event.type == StreamEventType.TEXT_DELTA:
-                
+                if event.text_delta:
                 # We convert it to the delta agent event
-                content = event.text_delta.content
-                response_text += content
-                yield AgentEvent.text_delta(content)
+                    content = event.text_delta.content
+                    response_text += content
+                    yield AgentEvent.text_delta(content)
             elif event.type == StreamEventType.ERROR:
                 yield AgentEvent.agent_error(event.error or "Unknown error occurred.")
 

@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from typing import Any
 from magnet_code.agent.agent import Agent
 from magnet_code.agent.events import AgentEventType
@@ -16,10 +17,10 @@ class CLI:
         self.agent : Agent | None = None
         self.tui = TUI(console)
     
-    async def run_single(self, message: str):
+    async def run_single(self, message: str) -> str | None:
         async with Agent() as agent:
             self.agent = agent
-            await self._process_message(message)
+            return await self._process_message(message)
 
     async def _process_message(self, message: str) -> str | None:
         # If we don't have a message, return an error
@@ -49,6 +50,8 @@ def main(
         }
     ]
     if prompt:
-        asyncio.run(cli.run_single(prompt))
+        result = asyncio.run(cli.run_single(prompt))
+        if result is None:
+            sys.exit(1)
 
 main()
