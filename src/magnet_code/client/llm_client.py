@@ -42,9 +42,45 @@ class LLMClient:
         self, client: AsyncOpenAI, kwargs: dict[str, Any]
     ) -> AsyncGenerator[StreamEvent, None]:
         response = await client.chat.completions.create(**kwargs)
+        
+        finish_reason: str | None = None
+        usage: TokenUsage | None = None
 
         async for chunk in response:
-            yield chunk
+            # The usage attribute is only present in the last chunks, so we have to check for it
+            if hasattr(chunk, "usage") and chunk.usage:
+                usage = TokenUsage(
+                    prompt_tokens=chunk.usage.prompt_tokens,
+                    completion_tokens=chunk.usage.completion_tokens,
+                    total_tokens=chunk.usage.total_tokens,
+                    cached_tokens=chunk.usage.prompt_tokens_details.cached_tokens,
+                )
+            # Check if this chunk has any choices
+            if not chunk.choices:
+                continue
+
+            # Get the first choice from the chunk
+            choice = chunk.choices[0]
+            text_delta = choice.delta
+            
+            if choice.finish_reason:
+                finish_reason = choice.finish_reason
+                
+            # If the text delta has content, issue an `StreamEvent`
+            if text_delta.content:
+                yield StreamEvent(
+                    type = EventType.TEXT_DELTA,
+                    text_delta=TextDelta(content=text_delta.content),
+                    finish_reason=finish_reason,
+                    usage=usage,
+                )
+        
+        # Yield a final `StreamEvent` to show the completion of the response from the assistant
+        yield StreamEvent(
+            type = EventType.MESSAGE_COPLETE,
+            finish_reason=finish_reason,
+            usage=usage, 
+        )
 
     async def _non_stream_response(
         self, client: AsyncOpenAI, kwargs: dict[str, Any]
