@@ -28,6 +28,7 @@ class CLI:
             return None
 
         assistant_streaming = False
+        final_response = None
         # Process each event from runnning
         async for event in self.agent.run(message):
             if event.type == AgentEventType.AGENT_START:
@@ -40,6 +41,13 @@ class CLI:
                     self.tui.begin_assitant()
                     assistant_streaming = True
                 self.tui.stream_assistant_delta(content)
+            elif event.type == AgentEventType.TEXT_COMPLETE:
+                final_response = event.data.get("content")
+                if assistant_streaming:
+                    assistant_streaming = False
+                    self.tui.end_assistant()
+                    
+        return final_response
 
 
 @click.command()
