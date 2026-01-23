@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 
 from magnet_code.agent.events import AgentEvent, AgentEventType
 from magnet_code.client.llm_client import LLMClient
-from magnet_code.client.response import EventType, StreamEventType
+from magnet_code.client.response import StreamEventType, StreamEventType
 
 
 class Agent:
