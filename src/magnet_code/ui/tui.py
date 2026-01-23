@@ -27,3 +27,22 @@ AGENT_THEME = Theme(
         "code": "white",
     }
 )
+
+# Singleton console handler
+_console: Console | None = None
+
+
+def get_console() -> Console:
+    global _console
+    if _console is None:
+        _console = Console(theme=AGENT_THEME, highlight=False)
+
+    return _console
+
+
+class TUI:
+    def __init__(
+        self,
+        console: Console | None,
+    ) -> None:
+        self.console = console or get_console()
