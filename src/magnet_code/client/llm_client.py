@@ -1,6 +1,6 @@
 import asyncio
 from typing import Any, AsyncGenerator
-from openai import AsyncOpenAI, RateLimitError
+from openai import APIConnectionError, AsyncOpenAI, RateLimitError
 
 import os
 
@@ -61,6 +61,17 @@ class LLMClient:
                         type = EventType.ERROR,
                         error = f"Rate limit exceeded: {e}",
                     )
+            except APIConnectionError as e:
+                # If we still have at least one try
+                if attempt < self._max_retries:
+                    # Implement exponential backoff (each time we double the wait time)
+                    wait_time = 2**attempt
+                    await asyncio.sleep(wait_time)
+                else:
+                    yield StreamEvent(
+                        type = EventType.ERROR,
+                        error = f"Connection error: {e}",
+                    ) 
                     
         return
 
