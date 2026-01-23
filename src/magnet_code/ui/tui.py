@@ -13,7 +13,7 @@ AGENT_THEME = Theme(
         "border": "grey35",
         "highlight": "bold cyan",
         # Roles
-        "user": "brigh_blue bold",
+        "user": "bright_blue bold",
         "assistant": "bright_white",
         # Tools
         "tool": "bright_magenta bold",
@@ -46,3 +46,7 @@ class TUI:
         console: Console | None,
     ) -> None:
         self.console = console or get_console()
+
+    def stream_assistant_delta(self, content: str) -> None:
+        """Prints the streaming text delta sent from the assistant"""
+        self.console.print(content, end="", markup=False)

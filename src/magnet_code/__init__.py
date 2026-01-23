@@ -7,16 +7,21 @@ from magnet_code.client.llm_client import LLMClient
 
 import click
 
+from magnet_code.ui.tui import TUI, get_console
+
+console = get_console()
+
 class CLI:
     def __init__(self):
         self.agent : Agent | None = None
+        self.tui = TUI(console)
     
     async def run_single(self, message: str):
         async with Agent() as agent:
             self.agent = agent
-            self._process_message(message)
+            await self._process_message(message)
 
-    async def __process_message(self, message: str) -> str | None:
+    async def _process_message(self, message: str) -> str | None:
         # If we don't have a message, return an error
         if not self.agent:
             return None
@@ -27,6 +32,7 @@ class CLI:
                 pass
             elif event.type == AgentEventType.TEXT_DELTA:
                 content = event.data.get("content", "")
+                self.tui.stream_assistant_delta(content)
 
 
 @click.command()

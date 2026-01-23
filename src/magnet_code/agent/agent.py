@@ -41,6 +41,7 @@ class Agent:
         async for event in self.client.chat_completion(messages, True):
             # If the stream event is a text delta
             if event.type == StreamEventType.TEXT_DELTA:
+                
                 # We convert it to the delta agent event
                 content = event.text_delta.content
                 response_text += content
