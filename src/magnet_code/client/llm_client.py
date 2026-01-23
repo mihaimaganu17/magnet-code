@@ -33,11 +33,14 @@ class LLMClient:
     async def chat_completion(
         self, messages: list[dict[str, Any]], stream: bool = True
     ) -> AsyncGenerator[StreamEvent, None]:
+        client = self.get_client()
+        
+        model = "gpt-5.2"
+        kwargs = {"model": model, "messages": messages, "stream": stream}
+
         for attempt in range(self._max_retries + 1):
             try:
-                client = self.get_client()
-                model = "gpt-5.2"
-                kwargs = {"model": model, "messages": messages, "stream": stream}
+                
                 if stream:
                     async for event in self._stream_response(client, kwargs):
                         # When streaming the response, openai api does not return the usage, so we need to
