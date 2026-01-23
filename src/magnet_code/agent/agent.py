@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import AsyncGenerator
 
 from magnet_code.agent.events import AgentEvent, AgentEventType
@@ -49,3 +50,11 @@ class Agent:
 
         if response_text:
             yield AgentEvent.text_complete(response_text)
+
+    async def __aenter__(self) -> Agent:
+        return self
+    
+    async def __aexit__(self, exc_type, exc_value, traceback) -> None:
+        if self.client:
+            await self.client.close()
+            self.client = None
