@@ -3,6 +3,8 @@ from openai import AsyncOpenAI
 
 import os
 
+import tiktoken
+
 from magnet_code.client.response import EventType, StreamEvent, TextDelta, TokenUsage
 
 
@@ -29,9 +31,15 @@ class LLMClient:
         self, messages: list[dict[str, Any]], stream: bool = True
     ) -> AsyncGenerator[StreamEvent, None]:
         client = self.get_client()
-        kwargs = {"model": "gpt-5.2", "messages": messages, "stream": stream}
+        model = "gpt-5.2"
+        kwargs = {"model": model, "messages": messages, "stream": stream}
         if stream:
             async for event in self._stream_response(client, kwargs):
+                # When streaming the response, openai api does not return the usage, so we need to
+                # compute it ourselves
+                if event.type == EventType.MESSAGE_COPLETE:
+                    prompt_tokens = len(tiktoken.encoding_for_model(model))
+                    event.usage.prompt_tokens = prompt_tokens
                 yield event
         else:
             event = await self._non_stream_response(client, kwargs)
