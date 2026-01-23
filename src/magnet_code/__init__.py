@@ -27,12 +27,18 @@ class CLI:
         if not self.agent:
             return None
 
+        assistant_streaming = False
         # Process each event from runnning
         async for event in self.agent.run(message):
             if event.type == AgentEventType.AGENT_START:
                 pass
             elif event.type == AgentEventType.TEXT_DELTA:
                 content = event.data.get("content", "")
+                # Check if the assistant is currently streaming, if not
+                if not assistant_streaming:
+                    # Mark up on display that the assitant is responding
+                    self.tui.begin_assitant()
+                    assistant_streaming = True
                 self.tui.stream_assistant_delta(content)
 
 

@@ -1,5 +1,7 @@
 from rich.console import Console
 from rich.theme import Theme
+from rich.rule import Rule
+from rich.text import Text
 
 AGENT_THEME = Theme(
     {
@@ -46,6 +48,14 @@ class TUI:
         console: Console | None,
     ) -> None:
         self.console = console or get_console()
+        # Marks if the assistant stream should currently start building up on display
+        self._assistant_stream_open = False
+
+    def begin_assitant(self) -> None:
+        """Assistant is starting to respond"""
+        self.console.print()
+        self.console.print(Rule(Text("Assistant", style='assistant')))
+        self._assistant_stream_open = True
 
     def stream_assistant_delta(self, content: str) -> None:
         """Prints the streaming text delta sent from the assistant"""
