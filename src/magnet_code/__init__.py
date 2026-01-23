@@ -2,10 +2,10 @@ import asyncio
 from magnet_code.client.llm_client import LLMClient
 
 
-def hello() -> str:
-    return "Hello from magnet-code!"
+import click
 
-
+@click.command()
+@click.argument("prompt", required=False)
 async def main():
     client = LLMClient()
     messages = [
@@ -18,3 +18,5 @@ async def main():
         print(event)
 
 asyncio.run(main())
+
+if __name__ == '__main__':

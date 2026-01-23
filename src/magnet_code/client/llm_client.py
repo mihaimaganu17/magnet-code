@@ -46,8 +46,9 @@ class LLMClient:
                         # When streaming the response, openai api does not return the usage, so we need to
                         # compute it ourselves
                         if event.type == EventType.MESSAGE_COPLETE:
-                            prompt_tokens = len(tiktoken.encoding_for_model(model))
-                            event.usage.prompt_tokens = prompt_tokens
+                            pass
+                            #prompt_tokens = len(tiktoken.encoding_for_model(model))
+                            #event.usage.prompt_tokens = prompt_tokens
                         yield event
                 else:
                     event = await self._non_stream_response(client, kwargs)
