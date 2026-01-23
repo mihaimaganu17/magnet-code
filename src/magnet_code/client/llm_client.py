@@ -53,6 +53,8 @@ class LLMClient:
                 else:
                     event = await self._non_stream_response(client, kwargs)
                     yield event
+
+                return
             # Check if the request exceeds some rate limit
             except RateLimitError as e:
                 # If we still have at least one try
