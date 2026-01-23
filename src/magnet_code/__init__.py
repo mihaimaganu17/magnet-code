@@ -5,6 +5,14 @@ from magnet_code.client.llm_client import LLMClient
 
 import click
 
+class CLI:
+    def __init__(self):
+        pass
+    
+    def run_single(self):
+        pass
+
+
 async def run(messages: dict[str, Any]):
     client = LLMClient()
     async for event in client.chat_completion(messages, True):
