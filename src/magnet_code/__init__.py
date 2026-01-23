@@ -1,22 +1,29 @@
 import asyncio
+from typing import Any
 from magnet_code.client.llm_client import LLMClient
 
 
 import click
 
+async def run(messages: dict[str, Any]):
+    client = LLMClient()
+    async for event in client.chat_completion(messages, True):
+        print(event)
+
+
 @click.command()
 @click.argument("prompt", required=False)
-async def main():
-    client = LLMClient()
+def main(
+    prompt: str | None,
+):
+    print(prompt)
+
     messages = [
         {
             "role": "user",
             "content": "What's up"
         }
     ]
-    async for event in client.chat_completion(messages, True):
-        print(event)
+    asyncio.run(run(messages))
 
-asyncio.run(main())
-
-if __name__ == '__main__':
+main()
