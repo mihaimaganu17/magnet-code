@@ -1,6 +1,6 @@
 import asyncio
 from typing import Any, AsyncGenerator
-from openai import APIConnectionError, AsyncOpenAI, RateLimitError
+from openai import APIConnectionError, APIError, AsyncOpenAI, RateLimitError
 
 import os
 
@@ -72,7 +72,11 @@ class LLMClient:
                         type = EventType.ERROR,
                         error = f"Connection error: {e}",
                     ) 
-                    
+            except APIError as e:
+                yield StreamEvent(
+                    type = EventType.ERROR,
+                    error = f"API error: {e}",
+                ) 
         return
 
     async def _stream_response(
