@@ -11,7 +11,7 @@ class TextDelta:
 
 
 @dataclass
-class EventType(str, Enum):
+class StreamEventType(str, Enum):
     # Partial text sent by the LLM until completion
     TEXT_DELTA = "text_delta"
     # Message from assistanc has been sent in its entirety
@@ -41,7 +41,7 @@ class TokenUsage:
 
 @dataclass
 class StreamEvent:
-    type: EventType
+    type: StreamEventType
     text_delta: TextDelta | None = None
     error: str | None = None
     finish_reason: str | None = None

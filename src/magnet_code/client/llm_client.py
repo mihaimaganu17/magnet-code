@@ -6,7 +6,7 @@ import os
 
 import tiktoken
 
-from magnet_code.client.response import EventType, StreamEvent, TextDelta, TokenUsage
+from magnet_code.client.response import StreamEventType, StreamEvent, TextDelta, TokenUsage
 
 
 class LLMClient:
@@ -45,7 +45,7 @@ class LLMClient:
                     async for event in self._stream_response(client, kwargs):
                         # When streaming the response, openai api does not return the usage, so we need to
                         # compute it ourselves
-                        if event.type == EventType.MESSAGE_COPLETE:
+                        if event.type == StreamEventType.MESSAGE_COPLETE:
                             pass
                             #prompt_tokens = len(tiktoken.encoding_for_model(model))
                             #event.usage.prompt_tokens = prompt_tokens
@@ -62,7 +62,7 @@ class LLMClient:
                     await asyncio.sleep(wait_time)
                 else:
                     yield StreamEvent(
-                        type = EventType.ERROR,
+                        type = StreamEventType.ERROR,
                         error = f"Rate limit exceeded: {e}",
                     )
             except APIConnectionError as e:
@@ -73,12 +73,12 @@ class LLMClient:
                     await asyncio.sleep(wait_time)
                 else:
                     yield StreamEvent(
-                        type = EventType.ERROR,
+                        type = StreamEventType.ERROR,
                         error = f"Connection error: {e}",
                     ) 
             except APIError as e:
                 yield StreamEvent(
-                    type = EventType.ERROR,
+                    type = StreamEventType.ERROR,
                     error = f"API error: {e}",
                 ) 
         return
@@ -114,7 +114,7 @@ class LLMClient:
             # If the text delta has content, issue an `StreamEvent`
             if text_delta.content:
                 yield StreamEvent(
-                    type = EventType.TEXT_DELTA,
+                    type = StreamEventType.TEXT_DELTA,
                     text_delta=TextDelta(content=text_delta.content),
                     finish_reason=finish_reason,
                     usage=usage,
@@ -122,7 +122,7 @@ class LLMClient:
         
         # Yield a final `StreamEvent` to show the completion of the response from the assistant
         yield StreamEvent(
-            type = EventType.MESSAGE_COPLETE,
+            type = StreamEventType.MESSAGE_COPLETE,
             finish_reason=finish_reason,
             usage=usage, 
         )
@@ -150,7 +150,7 @@ class LLMClient:
             )
 
         return StreamEvent(
-            type=EventType.MESSAGE_COPLETE,
+            type=StreamEventType.MESSAGE_COPLETE,
             text_delta=text_delta,
             finish_reason=choice.finish_reason,
             usage=usage,
