@@ -1,6 +1,6 @@
 from typing import AsyncGenerator
 
-from magnet_code.agent.events import AgentEvent
+from magnet_code.agent.events import AgentEvent, AgentEventType
 from magnet_code.client.llm_client import LLMClient
 from magnet_code.client.response import EventType, StreamEventType
 
@@ -20,9 +20,12 @@ class Agent:
         # Run the main agentic loop
         async for event in self._agentic_loop():
             yield event
+
+            if event.type == AgentEventType.TEXT_COMPLETE:
+                final_response = event.data.get("content")
         
         # After the loop completed, communicate it with a final end event
-        yield AgentEvent.agent_end()
+        yield AgentEvent.agent_end(final_response)
 
     async def _agentic_loop(self) -> AsyncGenerator[AgentEvent, None]:
         """
