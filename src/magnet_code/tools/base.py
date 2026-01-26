@@ -3,8 +3,10 @@ import abc
 from dataclasses import dataclass, field
 from pathlib import Path
 from pydantic import BaseModel, ValidationError
+from pydantic.json_schema import model_json_schema
 from enum import Enum
 from typing import Any
+
 
 class ToolKind(str, Enum):
     # I/O
@@ -17,14 +19,21 @@ class ToolKind(str, Enum):
     MEMORY = "memory"
     # Special LLM tools
     MCP = "mcp"
-    
-    
+
+
 @dataclass
 class ToolInvocation:
     parameters: dict[str, Any]
     cwd: Path
-    
-    
+
+
+@dataclass
+class ToolConfirmation:
+    tool_name: str
+    params: dict[str, Any]
+    description: str
+
+
 @dataclass
 class ToolResult:
     success: bool
@@ -38,21 +47,23 @@ class Tool(abc.ABC):
     # Helps the LLM choose the right tools
     description: str = "Base tool"
     kind: ToolKind = ToolKind.READ
-    
+
     def __init__(self) -> None:
         pass
-    
+
     @property
     def schema(self) -> dict[str, Any] | type["BaseModel"]:
-        raise NotImplementedError("Tools must define schema property or class attribute")
-    
+        raise NotImplementedError(
+            "Tools must define schema property or class attribute"
+        )
+
     @abc.abstractmethod
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         pass
-    
+
     def validate_params(self, params: dict[str, Any]) -> list[str]:
         schema = self.schema
-        
+
         if isinstance(params, type) and issubclass(schema, BaseModel):
             try:
                 schema(**params)
@@ -63,8 +74,58 @@ class Tool(abc.ABC):
                     field = ".".join(str(x) for x in error.get("loc", []))
                     msg = error.get("msg", "Validation error")
                     error.append(f"Parameter '{field}': {msg}")
-                    
+
                 return errors
             except Exception as e:
                 return [str(e)]
         return []
+
+    def is_mutating(self, params: dict[str, Any]) -> bool:
+        return self.kind in [
+            ToolKind.WRITE,
+            ToolKind.SHELL,
+            ToolKind.NETWORK,
+            ToolKind.MEMORY,
+        ]
+
+    async def get_confirmation(
+        self, invocation: ToolInvocation
+    ) -> ToolConfirmation | None:
+        if not self.is_mutating(invocation.parameters):
+            return None
+
+        return ToolConfirmation(
+            tool_name=self.name,
+            params=invocation.parameters,
+            description=f"Execute {self.name}",
+        )
+
+    def to_openai_schema(self) -> dict[str, Any]:
+        schema = self.schema
+
+        # Our own tool calling
+        if isinstance(schema, type) and issubclass(schema, BaseModel):
+            json_schema = model_json_schema(schema, mode="serialization")
+
+            return {
+                "name": self.name,
+                "description": self.description,
+                "parameters": {
+                    "type": "object",
+                    "properties": json_schema.get("properties", {}),
+                    "required": json_schema.get("required", []),
+                },
+            }
+
+        # MCP handling
+        if isinstance(schema, dict):
+            result = {"name": self.name, "description": self.description}
+            
+            if "parameters" in schema:
+                result["parameters"] = schema["parameters"]
+            else:
+                result["parameters"] = schema
+                
+            return result
+        
+        raise ValueError(f"Invalid schema type for tool {self.name}: {type(schema)}")
