@@ -50,7 +50,7 @@ class ContextManager:
             messages.append(
                 {
                     "role": "system",
-                    "content": self.get_system_prompt,
+                    "content": self._system_prompt,
                 }
             )
 

@@ -42,8 +42,6 @@ class Agent:
         - multi-turn conversation
         - context management (coming soon)
         """
-        # Currently we use a fake messages array because we do not have context management
-        messages = [{"role": "user", "content": "What's up"}]
         # Initial variable where we accumulate the response from the LLM
         response_text = ""
         
