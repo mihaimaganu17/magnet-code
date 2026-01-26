@@ -52,7 +52,8 @@ class TUI:
         self._assistant_stream_open = False
 
     def begin_assitant(self) -> None:
-        """Assistant is starting to respond"""
+        """Assistant is starting to respond, so we update the internal state for that and print
+        a visual indicator start"""
         self.console.print()
         self.console.print(Rule(Text("Assistant", style='assistant')))
         self._assistant_stream_open = True

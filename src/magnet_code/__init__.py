@@ -45,20 +45,29 @@ class CLI:
             # Currently we do not have any special behaviour when we get the start event
             if event.type == AgentEventType.AGENT_START:
                 pass
+            # If we have a text delta for generation progress
             elif event.type == AgentEventType.TEXT_DELTA:
+                # We get the content from the event
                 content = event.data.get("content", "")
-                # Check if the assistant is currently streaming, if not
+                # If the assistant is currently marked as NOT streaming a response
                 if not assistant_streaming:
-                    # Mark up on display that the assitant is responding
+                    # Mark up on display that the assitant is starting to respond
                     self.tui.begin_assitant()
+                    # Update the local state
                     assistant_streaming = True
+                # Print the content we got on the TUI
                 self.tui.stream_assistant_delta(content)
+            # If we get a text completion event (response finished generation)
             elif event.type == AgentEventType.TEXT_COMPLETE:
+                # Get the final response to be returned
                 final_response = event.data.get("content")
+                # If the assistant is currently marked as streaming a response
                 if assistant_streaming:
+                    # Mark it as not streaming, because it finished
                     assistant_streaming = False
+                    # Mark the same state for the TUI
                     self.tui.end_assistant()
-                    
+        # Return the final response gathered by the agent            
         return final_response
 
 
