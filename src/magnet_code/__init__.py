@@ -14,23 +14,35 @@ console = get_console()
 
 class CLI:
     def __init__(self):
+        # Agent used by this CLI to process user's requests
         self.agent : Agent | None = None
+        # Interface used to display agent actions, workflow and responses
         self.tui = TUI(console)
     
     async def run_single(self, message: str) -> str | None:
+        """
+        Run a single user message through the agent
+        """
         async with Agent() as agent:
             self.agent = agent
+            # Process the message and return the agent's response
             return await self._process_message(message)
 
+
     async def _process_message(self, message: str) -> str | None:
+        """Function to process a single user message given to the agent"""
         # If we don't have a message, return an error
         if not self.agent:
             return None
 
+        # Used to synchronize the response we get from the agent and the moment we display it.
+        # Initially we presume that the assistant did not start streaming the respone back to us
         assistant_streaming = False
+        # Holds the entire response of the LLM after the streaming is done. Initially empty
         final_response = None
-        # Process each event from runnning
+        # Process each event from the agent's run
         async for event in self.agent.run(message):
+            # Currently we do not have any special behaviour when we get the start event
             if event.type == AgentEventType.AGENT_START:
                 pass
             elif event.type == AgentEventType.TEXT_DELTA:

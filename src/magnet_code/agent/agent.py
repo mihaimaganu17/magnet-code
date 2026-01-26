@@ -8,13 +8,14 @@ from magnet_code.client.response import StreamEventType, StreamEventType
 
 class Agent:
     def __init__(self):
-        # Create a new client for this agent
+        # Create a new LLM client for this agent that will be used to generate responses
         self.client = LLMClient()
 
     async def run(self, message: str):
-        # Communicate back that the agent has started
+        """Run the agent one with the given message"""
+        # The first event in an agent's run is communicating back that the agent has started
         yield AgentEvent.agent_start(message)
-        # Add:
+        # Future add-ons:
         #   user message to context
         #   agent hooks that could run
         
@@ -34,10 +35,12 @@ class Agent:
         - multi-turn conversation
         - context management (coming soon)
         """
+        # Currently we use a fake messages array because we do not have context management
         messages = [{"role": "user", "content": "What's up"}]
-        # Initial variable where we accumulate the response
+        # Initial variable where we accumulate the response from the LLM
         response_text = ""
         
+        # Issue a chat completion request to the LLM client and handle the yielded events
         async for event in self.client.chat_completion(messages, True):
             # If the stream event is a text delta
             if event.type == StreamEventType.TEXT_DELTA:
