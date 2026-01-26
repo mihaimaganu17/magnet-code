@@ -21,6 +21,7 @@ class Agent:
         #   user message to context
         #   agent hooks that could run
         
+        final_response: str | None = None
         # Run the main agentic loop
         async for event in self._agentic_loop():
             yield event

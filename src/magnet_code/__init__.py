@@ -39,7 +39,7 @@ class CLI:
         # Initially we presume that the assistant did not start streaming the respone back to us
         assistant_streaming = False
         # Holds the entire response of the LLM after the streaming is done. Initially empty
-        final_response = None
+        final_response: str | None = None
         # Process each event from the agent's run
         async for event in self.agent.run(message):
             # Currently we do not have any special behaviour when we get the start event
@@ -67,6 +67,10 @@ class CLI:
                     assistant_streaming = False
                     # Mark the same state for the TUI
                     self.tui.end_assistant()
+            elif event.type == AgentEventType.AGENT_ERROR:
+                error = event.data.get("error", "Unknown error")
+                console.print(f"\n[error]Error: {error}[/error]")
+                
         # Return the final response gathered by the agent            
         return final_response
 

@@ -10,7 +10,6 @@ class TextDelta:
         return self.content
 
 
-@dataclass
 class StreamEventType(str, Enum):
     # Partial text sent by the LLM until completion
     TEXT_DELTA = "text_delta"
