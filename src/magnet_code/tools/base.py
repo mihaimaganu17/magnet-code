@@ -41,6 +41,14 @@ class ToolResult:
     error: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    @classmethod
+    def error_result(cls, error: str, output: str = ""):
+        return cls(
+            success=False,
+            output=output,
+            error=error,
+        )
+
 
 class Tool(abc.ABC):
     name: str = "base_tool"
@@ -122,12 +130,12 @@ class Tool(abc.ABC):
         # MCP handling
         if isinstance(schema, dict):
             result = {"name": self.name, "description": self.description}
-            
+
             if "parameters" in schema:
                 result["parameters"] = schema["parameters"]
             else:
                 result["parameters"] = schema
-                
+
             return result
-        
+
         raise ValueError(f"Invalid schema type for tool {self.name}: {type(schema)}")
