@@ -12,7 +12,9 @@ class Agent:
         self.client = LLMClient()
 
     async def run(self, message: str):
-        """Run the agent one with the given message"""
+        """Run the agent one time with the given message. The agent yields events for the start of
+        the agentic loop, the end of the agentic loop and any potential error in the loop, as well
+        as the text delta progress and the completion of a message."""
         # The first event in an agent's run is communicating back that the agent has started
         yield AgentEvent.agent_start(message)
         # Future add-ons:
@@ -42,23 +44,29 @@ class Agent:
         
         # Issue a chat completion request to the LLM client and handle the yielded events
         async for event in self.client.chat_completion(messages, True):
-            # If the stream event is a text delta
+            # If the stream event is a text delta (a new token generation)
             if event.type == StreamEventType.TEXT_DELTA:
                 if event.text_delta:
-                # We convert it to the delta agent event
+                    # We convert it to the delta agent event and accumulate the content
                     content = event.text_delta.content
                     response_text += content
+                    # And yield a new `AgentEvent` for content progress
                     yield AgentEvent.text_delta(content)
+            # If it is an error report an agent error event as well.
             elif event.type == StreamEventType.ERROR:
                 yield AgentEvent.agent_error(event.error or "Unknown error occurred.")
 
+        # After processing all events, if we have a text response, issue a `AgentEvent` to show the
+        # complete text response accumulated
         if response_text:
             yield AgentEvent.text_complete(response_text)
 
     async def __aenter__(self) -> Agent:
+        """Python helper function to open a context handler used by `with` statements"""
         return self
     
     async def __aexit__(self, exc_type, exc_value, traceback) -> None:
+        """Python helper function to close a context handler used by `with` statements"""
         if self.client:
             await self.client.close()
             self.client = None
