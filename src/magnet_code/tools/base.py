@@ -101,6 +101,8 @@ class Tool(abc.ABC):
         )
 
     def to_openai_schema(self) -> dict[str, Any]:
+        """Convert a BaseModel class or an MCP dictionary containing the details for the tool to an
+        openai supported tool schema"""
         schema = self.schema
 
         # Our own tool calling
