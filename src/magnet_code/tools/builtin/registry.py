@@ -31,10 +31,11 @@ class ToolRegistry:
         tools: list[Tool] = []
         
         for tool in self._tools.values():
-            tools.append(tools)
+            tools.append(tool)
         return tools
     
     def get_schemas(self) -> list[dict[str, Any]]:
+        print(self.get_tools())
         return [tool.to_openai_schema() for tool in self.get_tools()]
     
     
@@ -42,7 +43,7 @@ class ToolRegistry:
         tool = self.get(name)
         if tool is None:
             return ToolResult.error_result(
-                f"Unknown tool: {name}"
+                f"Unknown tool: {name}",
                 metadata = {"tool_name": name},
             )
             

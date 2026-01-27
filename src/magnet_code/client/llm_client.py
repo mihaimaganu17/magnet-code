@@ -177,6 +177,8 @@ class LLMClient:
                     finish_reason=finish_reason,
                     usage=usage,
                 )
+                
+            print(text_delta.tool_calls)
 
         # Yield a final `StreamEvent` to show the completion of the response from the assistant
         yield StreamEvent(
