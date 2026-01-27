@@ -47,14 +47,14 @@ class ToolRegistry:
                 metadata = {"tool_name": name},
             )
             
-        validation_errors = tool.validate_params(invocation.params)
+        validation_errors = tool.validate_params(params)
         if validation_errors:
             return ToolResult.error_result(
                 f"Invalid parameters: {'; '.join(validation_errors)}",
                 metadata={"tool_name": name, "validataion_errors": validation_errors,}
             )
         
-        invocation = ToolInvocation(params=params, cwd=cwd)
+        invocation = ToolInvocation(parameters=params, cwd=cwd)
         
         try:
             result = await tool.execute(invocation)

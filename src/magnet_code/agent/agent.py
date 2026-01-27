@@ -86,13 +86,13 @@ class Agent:
             yield AgentEvent.tool_call_start(
                 tool_call.call_id,
                 tool_call.name,
-                tool_call.arguments,
+                tool_call.arguments_delta,
             )
             
             result = await self.tool_registry.invoke(
                 tool_call.name,
-                tool_call.arguments,
-                Path.cwd,
+                tool_call.arguments_delta,
+                Path.cwd(),
             )
             
             yield AgentEvent.tool_call_complete(

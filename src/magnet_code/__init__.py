@@ -42,6 +42,7 @@ class CLI:
         final_response: str | None = None
         # Process each event from the agent's run
         async for event in self.agent.run(message):
+            print(event)
             # Currently we do not have any special behaviour when we get the start event
             if event.type == AgentEventType.AGENT_START:
                 pass

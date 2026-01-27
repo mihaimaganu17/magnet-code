@@ -12,7 +12,7 @@ class MessageItem:
     token_count: int | None = None
     # Why do we have a single tool call if there are many tool calls?
     tool_call_id: str | None = None
-    tool_calls: list[dict[str, Any]] = field(default_factor=list)
+    tool_calls: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         """Converts `self` to a dict compatible with OpenAI API spec for messages"""
@@ -54,7 +54,7 @@ class ContextManager:
         item = MessageItem(
             role='tool',
             content=content,
-            tool_call_id=tool_call_id
+            tool_call_id=tool_call_id,
             token_count=count_tokens(content, self._model_name),
         )
         self._messages.append(item)
