@@ -10,20 +10,20 @@ class ReadFileParams(BaseModel):
         description="Path to the file to read (relative to working directory or absolute)",
     )
     line: int = Field(
-        1, ge=1, description="Line number to start reading from (1-based) Defaults to 1"
+        1, ge=1, description="Line number to start reading from (1-based). Defaults to 1."
     )
     limit: int | None = Field(
         None,
         ge=1,
-        description="Maximum number of lines to read. If not specified, reads entire file.",
+        description="Maximum number of lines to read. If not specified, reads the entire file.",
     )
 
 
 class ReadFileTool(Tool):
     name = "read_file"
     description = (
-        "Read the contents of a text file. Returns the file content with line numbers. "
-        "For large files, use line and limit to read specific poritions. "
+        "Reads the contents of a text file. Returns the file content with line numbers. "
+        "For large files, use line and limit paramteres to read specific portions. "
         "Cannot read binary files (images, executables, etc.)."
     )
     kind = ToolKind.READ
@@ -33,6 +33,7 @@ class ReadFileTool(Tool):
     MAX_FILE_SIZE = 1024 * 1024 * 10
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
+        # TODO: Should we validate the parameters first?
         params = ReadFileParams(**invocation.parameters)
         path = resolve_path(invocation.cwd, params.path)
 

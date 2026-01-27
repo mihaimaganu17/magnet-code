@@ -12,6 +12,7 @@ class MessageItem:
     token_count: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
+        """Converts `self` to a dict compatible with OpenAI API spec for messages"""
         result: dict[str, Any] = {
             "role": self.role,
             "content": self.content,
@@ -43,7 +44,7 @@ class ContextManager:
 
 
     def get_messages(self) -> list[dict[str, Any]]:
-        """Convert the message into the OpenAI format, whici is a list of dicitionaries where each
+        """Convert the message into the OpenAI format, which is a list of dicitionaries where each
         dictionary has a `role` and a `content` key"""
         messages = []
         if self._system_prompt:

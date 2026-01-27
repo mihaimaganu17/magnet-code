@@ -60,7 +60,9 @@ class Tool(abc.ABC):
         pass
 
     @property
-    def schema(self) -> dict[str, Any] | type["BaseModel"]:
+    def schema(self) -> dict[str, Any] | type[BaseModel]:
+        """Schema returning a type dict compatible with MCP or a type inheriting BaseModel
+        compatible with this pipeline"""
         raise NotImplementedError(
             "Tools must define schema property or class attribute"
         )
@@ -72,7 +74,7 @@ class Tool(abc.ABC):
     def validate_params(self, params: dict[str, Any]) -> list[str]:
         schema = self.schema
 
-        if isinstance(params, type) and issubclass(schema, BaseModel):
+        if isinstance(schema, type) and issubclass(schema, BaseModel):
             try:
                 schema(**params)
             except ValidationError as e:
@@ -88,7 +90,7 @@ class Tool(abc.ABC):
                 return [str(e)]
         return []
 
-    def is_mutating(self, params: dict[str, Any]) -> bool:
+    def is_mutating(self) -> bool:
         return self.kind in [
             ToolKind.WRITE,
             ToolKind.SHELL,
@@ -99,7 +101,7 @@ class Tool(abc.ABC):
     async def get_confirmation(
         self, invocation: ToolInvocation
     ) -> ToolConfirmation | None:
-        if not self.is_mutating(invocation.parameters):
+        if not self.is_mutating():
             return None
 
         return ToolConfirmation(
