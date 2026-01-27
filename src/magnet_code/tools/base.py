@@ -49,6 +49,14 @@ class ToolResult:
             error=error,
         )
 
+    @classmethod
+    def success_result(cls, output: str, metadata: dict[str, Any] = {}):
+        return cls(
+            success=True,
+            output=output,
+            metadata=metadata,
+        )
+
 
 class Tool(abc.ABC):
     name: str = "base_tool"
