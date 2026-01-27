@@ -178,7 +178,8 @@ class LLMClient:
                     usage=usage,
                 )
                 
-            print(text_delta.tool_calls)
+            if text_delta.tool_calls:
+                print(text_delta)
 
         # Yield a final `StreamEvent` to show the completion of the response from the assistant
         yield StreamEvent(
@@ -203,8 +204,8 @@ class LLMClient:
         # If the message has content, we put it in a `TextDelta` to avoid creating a new type
         if message.content:
             text_delta = TextDelta(content=message.content)
-
         usage = None
+
         # Log token usage if any is reported
         if response.usage:
             usage = TokenUsage(
