@@ -6,7 +6,12 @@ import os
 
 import tiktoken
 
-from magnet_code.client.response import StreamEventType, StreamEvent, TextDelta, TokenUsage
+from magnet_code.client.response import (
+    StreamEventType,
+    StreamEvent,
+    TextDelta,
+    TokenUsage,
+)
 
 
 class LLMClient:
@@ -30,21 +35,47 @@ class LLMClient:
             await self._client.close()
             self._client = None
 
+    def _build_tools(self, tools: list[dict[str, Any]]):
+        """Encapsulate each tool in a function type"""
+        return [
+            {
+                "type": "function",
+                "function": {
+                    "name": tool["name"],
+                    "description": tool.get("description", ""),
+                    "parameters": tool.get(
+                        "parameters",
+                        {
+                            "type": "object",
+                            "properties": {},
+                        },
+                    ),
+                },
+            }
+            for tool in tools
+        ]
+
     async def chat_completion(
-        self, messages: list[dict[str, Any]], stream: bool = True
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+        stream: bool = True,
     ) -> AsyncGenerator[StreamEvent, None]:
-        """Handles a streaming or non-streaming chat completion request to the LLM
-        """
+        """Handles a streaming or non-streaming chat completion request to the LLM"""
         # Get a handle to the client
         client = self.get_client()
-        
+
         # TODO: Temporary hard coded value for the model, which will be replaced by a configurable
         # setting
         model = "gpt-5.2"
         # Arguments to handel configuration, content and options for the LLM request
         kwargs = {"model": model, "messages": messages, "stream": stream}
 
-        # Manages error handling and retries in case the request fails 
+        if tools:
+            kwargs["tools"] = self._build_tools(tools)
+            kwargs["tool_choice"] = "auto"
+
+        # Manages error handling and retries in case the request fails
         for attempt in range(self._max_retries + 1):
             try:
                 # If we have a streaming request
@@ -55,8 +86,8 @@ class LLMClient:
                         # so we need to compute it ourselves.
                         if event.type == StreamEventType.MESSAGE_COPLETE:
                             pass
-                            #prompt_tokens = len(tiktoken.encoding_for_model(model))
-                            #event.usage.prompt_tokens = prompt_tokens
+                            # prompt_tokens = len(tiktoken.encoding_for_model(model))
+                            # event.usage.prompt_tokens = prompt_tokens
                         yield event
                 # Otherwise handle the non-streaming response
                 else:
@@ -75,8 +106,8 @@ class LLMClient:
                 # If we have no other attempt, return an error
                 else:
                     yield StreamEvent(
-                        type = StreamEventType.ERROR,
-                        error = f"Rate limit exceeded: {e}",
+                        type=StreamEventType.ERROR,
+                        error=f"Rate limit exceeded: {e}",
                     )
             # Check if there is a connection error
             except APIConnectionError as e:
@@ -87,14 +118,14 @@ class LLMClient:
                     await asyncio.sleep(wait_time)
                 else:
                     yield StreamEvent(
-                        type = StreamEventType.ERROR,
-                        error = f"Connection error: {e}",
+                        type=StreamEventType.ERROR,
+                        error=f"Connection error: {e}",
                     )
-            # Check if the API returned an error 
+            # Check if the API returned an error
             except APIError as e:
                 yield StreamEvent(
-                    type = StreamEventType.ERROR,
-                    error = f"API error: {e}",
+                    type=StreamEventType.ERROR,
+                    error=f"API error: {e}",
                 )
         # At this point, we have exceeded and failed all the attempts to get a response
         return
@@ -104,10 +135,11 @@ class LLMClient:
     ) -> AsyncGenerator[StreamEvent, None]:
         """Perform a chat completion request with the desired configuration. Handle the progress
         of the streaming response, yielding a new text `StreamEvent` for each LLM token response
-        and issue a final message complete event. Also gather usage information if present"""
+        and issue a final message complete event. Also gather usage information if present
+        """
         # Make a chat completion request with the desired client and configuration
         response = await client.chat.completions.create(**kwargs)
-        
+
         # Why the LLM stopped generating the response further
         finish_reason: str | None = None
         # The token usage for this request
@@ -131,26 +163,26 @@ class LLMClient:
             # Get the first choice from the chunk and its text content located in `delta`
             choice = chunk.choices[0]
             text_delta = choice.delta
-            
+
             # If we get a finish reason, we update it locally
             if choice.finish_reason:
                 finish_reason = choice.finish_reason
-                
+
             # If the text delta has content, issue a `StreamEvent` of text delta progress. This is
             # usually another token that the LLM has generated.
             if text_delta.content:
                 yield StreamEvent(
-                    type = StreamEventType.TEXT_DELTA,
+                    type=StreamEventType.TEXT_DELTA,
                     text_delta=TextDelta(content=text_delta.content),
                     finish_reason=finish_reason,
                     usage=usage,
                 )
-        
+
         # Yield a final `StreamEvent` to show the completion of the response from the assistant
         yield StreamEvent(
-            type = StreamEventType.MESSAGE_COPLETE,
+            type=StreamEventType.MESSAGE_COPLETE,
             finish_reason=finish_reason,
-            usage=usage, 
+            usage=usage,
         )
 
     async def _non_stream_response(
@@ -180,7 +212,7 @@ class LLMClient:
                 cached_tokens=response.usage.prompt_tokens_details.cached_tokens,
             )
 
-        # Return a single event to show completion and the resulting response 
+        # Return a single event to show completion and the resulting response
         return StreamEvent(
             type=StreamEventType.MESSAGE_COPLETE,
             text_delta=text_delta,
