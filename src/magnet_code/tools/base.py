@@ -60,6 +60,12 @@ class ToolResult:
             truncated=truncated,
         )
 
+    def to_model_output(self) -> str:
+        if self.success:
+            return self.output
+        
+        return f"Error: {self.error}\n\nOutput:\n{self.output}"
+
 
 class Tool(abc.ABC):
     name: str = "base_tool"
