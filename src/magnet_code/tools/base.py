@@ -40,6 +40,7 @@ class ToolResult:
     output: str
     error: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    truncated: bool = False
 
     @classmethod
     def error_result(cls, error: str, output: str = ""):
@@ -50,11 +51,12 @@ class ToolResult:
         )
 
     @classmethod
-    def success_result(cls, output: str, metadata: dict[str, Any] = {}):
+    def success_result(cls, output: str, metadata: dict[str, Any] = {}, truncated: bool = False):
         return cls(
             success=True,
             output=output,
             metadata=metadata,
+            truncated=truncated,
         )
 
 
