@@ -1,9 +1,10 @@
 from __future__ import annotations
+from pathlib import Path
 from typing import AsyncGenerator
 
 from magnet_code.agent.events import AgentEvent, AgentEventType
 from magnet_code.client.llm_client import LLMClient
-from magnet_code.client.response import StreamEventType, StreamEventType
+from magnet_code.client.response import StreamEventType, StreamEventType, ToolCall
 from magnet_code.context.manager import ContextManager
 from magnet_code.tools.builtin.registry import create_default_registry
 
@@ -48,6 +49,7 @@ class Agent:
         response_text = ""
 
         tool_schemas = self.tool_registry.get_schemas()
+        tool_calls: list[ToolCall] = []
 
         # Issue a chat completion request to the LLM client and handle the yielded events
         async for event in self.client.chat_completion(
@@ -64,6 +66,9 @@ class Agent:
                     response_text += content
                     # And yield a new `AgentEvent` for content progress
                     yield AgentEvent.text_delta(content)
+            elif event.type == StreamEventType.TOOL_CALL_COMPLETE:
+                if event.tool_call:
+                    tool_calls.append(event.tool_call)
             # If it is an error report an agent error event as well.
             elif event.type == StreamEventType.ERROR:
                 yield AgentEvent.agent_error(event.error or "Unknown error occurred.")
@@ -74,6 +79,30 @@ class Agent:
         # complete text response accumulated
         if response_text:
             yield AgentEvent.text_complete(response_text)
+            
+        # Keeping track of what tool calls where made
+        tool_call_results: list[ToolResultMessage] = [
+            
+        ]
+        # Execute tool calls
+        for tool_call in tool_calls:
+            yield AgentEvent.tool_call_start(
+                tool_call.call_id,
+                tool_call.name,
+                tool_call.arguments,
+            )
+            
+            result = await self.tool_registry.invoke(
+                tool_call.name,
+                tool_call.arguments,
+                Path.cwd,
+            )
+            
+            yield AgentEvent.tool_call_complete(
+                tool_call.call_id,
+                tool_call.name,
+                result,
+            )
 
     async def __aenter__(self) -> Agent:
         """Python helper function to open a context handler used by `with` statements"""
