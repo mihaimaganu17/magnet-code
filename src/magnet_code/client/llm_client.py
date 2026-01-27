@@ -198,7 +198,7 @@ class LLMClient:
                                 yield StreamEvent(
                                     type=StreamEventType.TOOL_CALL_START,
                                     tool_call_delta=ToolCallDelta(
-                                        call_id=tool_calls[idx]['id']
+                                        call_id=tool_calls[idx]['id'],
                                         name=tool_call_delta.function.name
                                     )
                                 )
@@ -208,8 +208,8 @@ class LLMClient:
                                 yield StreamEvent(
                                     type=StreamEventType.TOOL_CALL_DELTA,
                                     tool_call_delta=ToolCallDelta(
-                                        call_id=tool_calls[idx]['id']
-                                        name=tool_call_delta.function.name
+                                        call_id=tool_calls[idx]['id'],
+                                        name=tool_call_delta.function.name,
                                         arguments_data=tool_call_delta.function.arguments
                                     )
                                 )
@@ -249,6 +249,15 @@ class LLMClient:
         if message.content:
             text_delta = TextDelta(content=message.content)
         usage = None
+        
+        tool_calls: list[ToolCall] = []
+        if message.tool_calls:
+            for tc in message.tool_calls:
+                tool_calls.append(
+                    call_id = tc.id,
+                    name=tc.function.name,
+                    arguments=parse_tool_call_arguments(tc.function.arguments)
+                )
 
         # Log token usage if any is reported
         if response.usage:
