@@ -91,6 +91,9 @@ class ReadFileTool(Tool):
             for i, line in enumerate(selected_lines, start=start_idx):
                 formatted_lines.append(f"{i:6}|{line}")
 
+           
+            # TODO: How do we pass model here?
+            model = "gpt-o1" 
             output = "\n".join(formatted_lines)
             token_count = count_tokens(output, model)
 
