@@ -243,9 +243,7 @@ class TUI:
 
         primary_path = None
         blocks = []
-        if isinstance(metadata, dict) and isinstance(
-            metadata.get("path"), str
-        ):
+        if isinstance(metadata, dict) and isinstance(metadata.get("path"), str):
             primary_path = metadata.get("path")
 
         if name == "read_file" and success:

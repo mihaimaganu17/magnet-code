@@ -29,6 +29,23 @@ class CLI:
             # Process the message and return the agent's response
             return await self._process_message(message)
 
+    async def run_interactive(self) -> str | None:
+        async with Agent() as agent:
+            self.agent = agent
+            
+            while True:
+                try:
+                    user_input = console.input("\n[user]>[/user] ").strip()
+                    if not user_input:
+                        continue
+                    # Process the message and return the agent's response
+                    await self._process_message(user_input)
+                except KeyboardInterrupt:
+                    console.print("\n[dim]Use /exit to quit[/dim]")
+                except EOFError:
+                    break
+        console.print("\n[dim]Goodbye![/dim]")
+
     def _get_tool_kind(self, tool_name: str) -> str | None:
         tool_kind = None
         # Get the tool from the avaible tool registry from the agent
@@ -127,6 +144,7 @@ def main(
         result = asyncio.run(cli.run_single(prompt))
         if result is None:
             sys.exit(1)
-
+    else:
+        asyncio.run(cli.run_interactive())
 
 main()
