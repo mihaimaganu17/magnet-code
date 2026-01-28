@@ -84,7 +84,8 @@ class Agent:
         if response_text:
             yield AgentEvent.text_complete(response_text)
             
-        # Keeping track of what tool calls where made
+        # Keeping track of the results of the tools associated with their ID, such that we can
+        # refeed them to the next LLM request through the context manager.
         tool_call_results: list[ToolResultMessage] = []
         # Execute tool calls
         for tool_call in tool_calls:

@@ -74,7 +74,9 @@ class CLI:
             elif event.type == AgentEventType.AGENT_ERROR:
                 error = event.data.get("error", "Unknown error")
                 console.print(f"\n[error]Error: {error}[/error]")
-            # If we have a tool call start, this means the agent wants to call a tool
+            # If we have a tool call start, this means the agent wants to call a tool and we want
+            # to display progress information with the tool name and the desired parameters. This
+            # is useful for debugging and tool executions which need confirmation.
             elif event.type == AgentEventType.TOOL_CALL_START:
                 # Get the name of the tool
                 tool_name = event.data.get("name", "unknown")
