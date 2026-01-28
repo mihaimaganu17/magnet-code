@@ -1,0 +1,1 @@
+def load_config(cwd: Path | None) -> Config:
