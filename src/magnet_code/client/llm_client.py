@@ -39,7 +39,7 @@ class LLMClient:
             self._client = None
 
     def _build_tools(self, tools: list[dict[str, Any]]):
-        """Encapsulate each tool in a function type"""
+        """Encapsulate each tool in a function type to match the OpenAI API model"""
         return [
             {
                 "type": "function",
@@ -137,8 +137,8 @@ class LLMClient:
         self, client: AsyncOpenAI, kwargs: dict[str, Any]
     ) -> AsyncGenerator[StreamEvent, None]:
         """Perform a chat completion request with the desired configuration. Handle the progress
-        of the streaming response, yielding a new text `StreamEvent` for each LLM token response
-        and issue a final message complete event. Also gather usage information if present
+        of the streaming response, yielding a new `StreamEvent` for each LLM streamed response
+        and issue a final text message complete event. Also gather usage information if present
         """
         # Make a chat completion request with the desired client and configuration
         response = await client.chat.completions.create(**kwargs)
@@ -147,6 +147,7 @@ class LLMClient:
         finish_reason: str | None = None
         # The token usage for this request
         usage: TokenUsage | None = None
+        # The tool calls that the LLM gave as a response
         tool_calls: dict[int, dict[str, Any]] = {}
 
         # For each response chunk
@@ -166,26 +167,30 @@ class LLMClient:
 
             # Get the first choice from the chunk and its text content located in `delta`
             choice = chunk.choices[0]
-            text_delta = choice.delta
+            delta = choice.delta
 
             # If we get a finish reason, we update it locally
             if choice.finish_reason:
                 finish_reason = choice.finish_reason
 
-            # If the text delta has content, issue a `StreamEvent` of text delta progress. This is
+            # If the delta response has content, issue a `StreamEvent` of text delta progress. This is
             # usually another token that the LLM has generated.
-            if text_delta.content:
+            if delta.content:
                 yield StreamEvent(
                     type=StreamEventType.TEXT_DELTA,
-                    text_delta=TextDelta(content=text_delta.content),
+                    text_delta=TextDelta(content=delta.content),
                     finish_reason=finish_reason,
                     usage=usage,
                 )
                 
-            if text_delta.tool_calls:
-                for tool_call_delta in text_delta.tool_calls:
+            # If the delta response has tool calls, because they are streaming, we need to gather
+            # them in a single `tool_calls` list and construct their parameters
+            if delta.tool_calls:
+                for tool_call_delta in delta.tool_calls:
+                    # Get the index of the tool call
                     idx = tool_call_delta.index
 
+                    # If the idx of the tool call is not already mapped, create a new mapping for it
                     if idx not in tool_calls:
                         tool_calls[idx] = {
                             'id': tool_call_delta.id or "",
@@ -193,9 +198,12 @@ class LLMClient:
                             'arguments': ''
                         }
                         
+                    # If we have a function field and the we are keeping track of the index in `tool_calls`
                     if tool_call_delta.function and idx in tool_calls:
+                        # Get the function name and assign it in the `tool_calls`
                         if tool_call_delta.function.name:
                             tool_calls[idx]['name'] = tool_call_delta.function.name
+                            # Return an event for the agent to tell it that we have a tool call
                             yield StreamEvent(
                                 type=StreamEventType.TOOL_CALL_START,
                                 tool_call_delta=ToolCallDelta(
@@ -203,8 +211,12 @@ class LLMClient:
                                     name=tool_call_delta.function.name
                                 )
                             )
+                        # If we have function arguments
                         if tool_call_delta.function.arguments:
-                            tool_calls[idx]['arguments'] += tool_call_delta.function.arguments    
+                            # Append it to the current index of arguments, as arguments are streamed
+                            # just like normal text and need to be assembled
+                            tool_calls[idx]['arguments'] += tool_call_delta.function.arguments
+                            # Return the delta of this event  
                             yield StreamEvent(
                                 type=StreamEventType.TOOL_CALL_DELTA,
                                 tool_call_delta=ToolCallDelta(
@@ -214,8 +226,10 @@ class LLMClient:
                                 )
                             )
 
-        
+        # For each tool_call we gathered
         for idx, tc in tool_calls.items():
+            # Issue an event that tells the agent we have a complete tool call which can be 
+            # validated and executed
             yield StreamEvent(
                 type=StreamEventType.TOOL_CALL_COMPLETE,
                 tool_call=ToolCall(
@@ -251,7 +265,9 @@ class LLMClient:
         usage = None
         
         tool_calls: list[ToolCall] = []
+        # If the message contains any tool calls
         if message.tool_calls:
+            # Add all the tool calls to the list
             for tc in message.tool_calls:
                 tool_calls.append(
                     call_id = tc.id,

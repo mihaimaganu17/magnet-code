@@ -30,23 +30,25 @@ class CLI:
 
 
     async def _process_message(self, message: str) -> str | None:
-        """Function to process a single user message given to the agent"""
-        # If we don't have a message, return an error
+        """Function to process a single user message given to the agent.
+        :return: the final response of the LLM or None if no agent is present
+        :rtype: str | None"""
+        # If we don't have a message, return
         if not self.agent:
             return None
 
-        # Used to synchronize the response we get from the agent and the moment we display it.
-        # Initially we presume that the assistant did not start streaming the respone back to us
+        # Used to synchronize the streaming response we get from the agent and the moment we display
+        # it.
+        # Initially we presume that the assistant did not start streaming respones back to us
         assistant_streaming = False
         # Holds the entire response of the LLM after the streaming is done. Initially empty
         final_response: str | None = None
         # Process each event from the agent's run
         async for event in self.agent.run(message):
-            print(event)
             # Currently we do not have any special behaviour when we get the start event
             if event.type == AgentEventType.AGENT_START:
                 pass
-            # If we have a text delta for generation progress
+            # If we have a text delta for LLM response generation progress
             elif event.type == AgentEventType.TEXT_DELTA:
                 # We get the content from the event
                 content = event.data.get("content", "")
@@ -54,7 +56,7 @@ class CLI:
                 if not assistant_streaming:
                     # Mark up on display that the assitant is starting to respond
                     self.tui.begin_assitant()
-                    # Update the local state
+                    # Update the local state such that we know the assistant is streaming on display
                     assistant_streaming = True
                 # Print the content we got on the TUI
                 self.tui.stream_assistant_delta(content)
@@ -68,12 +70,16 @@ class CLI:
                     assistant_streaming = False
                     # Mark the same state for the TUI
                     self.tui.end_assistant()
+            # If we get an error, display it accordingly
             elif event.type == AgentEventType.AGENT_ERROR:
                 error = event.data.get("error", "Unknown error")
                 console.print(f"\n[error]Error: {error}[/error]")
+            # If we have a tool call start, this means the agent wants to call a tool
             elif event.type == AgentEventType.TOOL_CALL_START:
+                # Get the name of the tool
                 tool_name = event.data.get("name", "unknown")
                 tool_kind = None
+                # Get the tool from the avaible tool registry from the agent
                 tool = self.agent.tool_registry(tool_name)
                 
                 if not tool:

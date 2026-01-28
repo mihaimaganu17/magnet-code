@@ -48,7 +48,10 @@ class Agent:
         # Initial variable where we accumulate the response from the LLM
         response_text = ""
 
+        # Get OpenAI API compatible schema of all the tools in the registry, such that we can add
+        # them to the LLM request and the LLM knows which tools are available for calling
         tool_schemas = self.tool_registry.get_schemas()
+        # Keep track of the list of tool calls the LLM sends back as response
         tool_calls: list[ToolCall] = []
 
         # Issue a chat completion request to the LLM client and handle the yielded events

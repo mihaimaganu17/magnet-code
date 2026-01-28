@@ -78,6 +78,8 @@ class ToolResultMessage:
         }
 
 def parse_tool_call_arguments(arguments_str: str) -> dict[str, Any]:
+    """Convert the argument string into a json object or a `raw_arguments` format if a json
+    conversion is not possible"""
     if not arguments_str:
         return {}
     
