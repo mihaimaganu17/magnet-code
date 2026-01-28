@@ -47,6 +47,7 @@ class ContextManager:
             role="assistant",
             content=content or "",
             token_count=count_tokens(content, self._model_name),
+            tool_calls=tool_calls or [],
         )
         self._messages.append(item)
 

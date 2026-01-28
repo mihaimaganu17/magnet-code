@@ -4,7 +4,12 @@ from typing import AsyncGenerator
 
 from magnet_code.agent.events import AgentEvent, AgentEventType
 from magnet_code.client.llm_client import LLMClient
-from magnet_code.client.response import StreamEventType, StreamEventType, ToolCall, ToolResultMessage
+from magnet_code.client.response import (
+    StreamEventType,
+    StreamEventType,
+    ToolCall,
+    ToolResultMessage,
+)
 from magnet_code.context.manager import ContextManager
 from magnet_code.tools.builtin.registry import create_default_registry
 
@@ -78,12 +83,29 @@ class Agent:
                 yield AgentEvent.agent_error(event.error or "Unknown error occurred.")
 
         # Add the response as an asssitant message
-        self.context_manager.add_assistant_message(response_text or None)
+        self.context_manager.add_assistant_message(
+            response_text or None,
+            (
+                [
+                    {
+                        "id": tc.call_id,
+                        "type": "function",
+                        "function": {
+                            "name": tc.name,
+                            "arguments": str(tc.arguments_delta),
+                        },
+                    }
+                    for tc in tool_calls
+                ]
+                if tool_calls
+                else None
+            ),
+        )
         # After processing all events, if we have a text response, issue a `AgentEvent` to show the
         # complete text response accumulated
         if response_text:
             yield AgentEvent.text_complete(response_text)
-            
+
         # Keeping track of the results of the tools associated with their ID, such that we can
         # refeed them to the next LLM request through the context manager.
         tool_call_results: list[ToolResultMessage] = []
@@ -95,21 +117,21 @@ class Agent:
                 tool_call.name,
                 tool_call.arguments_delta,
             )
-            
+
             # Invoke the tool
             result = await self.tool_registry.invoke(
                 tool_call.name,
                 tool_call.arguments_delta,
                 Path.cwd(),
             )
-            
+
             # Issue a completed tool call event
             yield AgentEvent.tool_call_complete(
                 tool_call.call_id,
                 tool_call.name,
                 result,
             )
-            
+
             # Store the tool call results
             tool_call_results.append(
                 ToolResultMessage(
@@ -126,7 +148,6 @@ class Agent:
                 tool_result.tool_call_id,
                 tool_result.content,
             )
-            
 
     async def __aenter__(self) -> Agent:
         """Python helper function to open a context handler used by `with` statements"""

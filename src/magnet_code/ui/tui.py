@@ -66,7 +66,7 @@ class TUI:
         self._tool_args_by_call_id: dict[str, dict[str, Any]] = {}
         self.cwd = Path.cwd()
 
-    def begin_tant(self) -> None:
+    def begin_assistant(self) -> None:
         """Assistant is starting to respond, so we update the internal state for that and print
         a visual indicator start"""
         self.console.print()
