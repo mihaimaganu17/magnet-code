@@ -28,6 +28,7 @@ class ToolRegistry:
        return self._tools.get(name, None) 
     
     def get_tools(self) -> list[Tool]:
+        """Get a list of all the available tools in this registry"""
         tools: list[Tool] = []
         
         for tool in self._tools.values():
@@ -35,11 +36,15 @@ class ToolRegistry:
         return tools
     
     def get_schemas(self) -> list[dict[str, Any]]:
-        print(self.get_tools())
-        return [tool.to_openai_schema() for tool in self.get_tools()]
-    
+        """Convert the list of tools into an OpenAI API compatible tool schema in order to be
+        added to the LLM request such that the LLM knows which are the available tools"""
+        return [tool.to_openai_schema() for tool in self.get_tools()] 
     
     async def invoke(self, name: str, params: dict[str, Any], cwd: Path = None) -> ToolResult:
+        """Invoke a tool identified by `name` with the desired `params` in the desired working
+        directory"""
+        
+        # Get the tool by name and check its existence
         tool = self.get(name)
         if tool is None:
             return ToolResult.error_result(
@@ -47,13 +52,16 @@ class ToolRegistry:
                 metadata = {"tool_name": name},
             )
             
+        # Validate that the parameters given from the LLM, match the model tool schema
         validation_errors = tool.validate_params(params)
+        # If there are any validation errors, we return them
         if validation_errors:
             return ToolResult.error_result(
                 f"Invalid parameters: {'; '.join(validation_errors)}",
                 metadata={"tool_name": name, "validataion_errors": validation_errors,}
             )
         
+        # Wrapper type, easy to use
         invocation = ToolInvocation(parameters=params, cwd=cwd)
         
         try:
@@ -69,6 +77,7 @@ class ToolRegistry:
             )
             
 def create_default_registry() -> ToolRegistry:
+    """Create a default registry which has all the builtin tools"""
     registry = ToolRegistry()
     
     for tool_class in get_all_builtin_tools():
