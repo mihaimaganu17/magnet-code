@@ -1,17 +1,20 @@
 from pathlib import Path
 from typing import Any
-from rich.console import Console
+from rich.console import Console, Group
 from rich.theme import Theme
 from rich.rule import Rule
 from rich.text import Text
 from rich.panel import Panel
 from rich.table import Table
 from rich import box
+from rich.syntax import Syntax
 
 from magnet_code.tools.base import ToolResult
 from magnet_code.utils.paths import resolve_path
 
 import re
+
+from magnet_code.utils.text import truncate_text
 
 AGENT_THEME = Theme(
     {
@@ -180,7 +183,7 @@ class TUI:
 
         code_lines: list[str] = []
         start_line: int | None = None
-        
+
         for line in body.splitlines():
             m = re.match(r"^\s*(\d+)\|(.*)$", line)
             if not m:
@@ -189,51 +192,105 @@ class TUI:
             if start_line is None:
                 start_line = line_number
             code_lines.append(m.group(2))
-            
+
         if start_line is None:
             return None
-        
+
         return start_line, "\n".join(code_lines)
 
+    def _guess_language(self, path: str | None) -> str:
+        if not path:
+            return "text"
+        suffix = Path(path).suffix.lower()
+        return {
+            ".py": "python",
+            ".rs": "rust",
+            ".toml": "toml",
+            "js": "javascript",
+            "ts": "typescript",
+            "jsx": "jsx",
+            "tsx": "tsx",
+            ".md": "markdown",
+            ".json": "json",
+            ".sh": "bash",
+            ".sql": "sql",
+            ".c": "c",
+            ".h": "c",
+            ".html": "html",
+        }[suffix]
 
     def tool_call_complete(self, call_id: str, name: str, result: ToolResult) -> None:
+        border_style = "tool"
         status_icon = "✅" if result.success else "❌"
         status_style = "success" if result.success else "error"
 
         title = Text.assemble(
-            (f"{status_icon}", f"{status_style}"),
+            (status_icon, status_style),
             (name, "tool"),
             ("  ", "muted"),
             (f"#{call_id[:8]}", "muted"),
         )
-        
+
         primary_path = None
-        if isinstance(result.metadata, dict) and isinstance(result.metadata.get('path'), str):
+        blocks = []
+        if isinstance(result.metadata, dict) and isinstance(
+            result.metadata.get("path"), str
+        ):
             primary_path = result.metadata.get("path")
 
         if name == "read_file" and result.success:
-            start_line, code = self._extract_read_file_code(result.output)
-            
-            shown_start = result.metadata.get('shown_start')
-            shown_end = result.metadata.get('shown_end')
-            total_lines = result.metadata.get('total_lines')
+            if primary_path:
+                start_line, code = self._extract_read_file_code(result.output)
 
+                shown_start = result.metadata.get("shown_start")
+                shown_end = result.metadata.get("shown_end")
+                total_lines = result.metadata.get("total_lines")
+                prog_lang = self._guess_language(primary_path)
 
-        display_args = dict(arguments)
-        for key in ("path", "cwd"):
-            val = display_args.get(key)
-            if isinstance(val, str) and self.cwd:
-                display_args[key] = str(resolve_path(self.cwd, val))
+                blocks.append(Text())
+                header_parts = resolve_path(self.cwd, primary_path)
+                header_parts.append(" 🔵 ")
+
+                if shown_start and shown_end and total_lines:
+                    header_parts.append(
+                        f"lines {shown_start}-{shown_end} of total_lines"
+                    )
+
+                header = "".join(header_parts)
+                blocks.append(Text())
+                blocks.append(
+                    Syntax(
+                        code,
+                        prog_lang,
+                        theme="vim",
+                        line_numbers=True,
+                        start_line=start_line,
+                        word_wrap=False,
+                    )
+                )
+            else:
+                output_display = truncate_text(
+                    result.output,
+                    "",
+                    240,
+                )
+                blocks.append(
+                    Syntax(
+                        output_display,
+                        "text",
+                        theme="vim",
+                        word_wrap=False,
+                    )
+                )
+
+        if result.truncated:
+            blocks.append(Text("note: tool output was truncated", style="warning"))
 
         panel = Panel(
-            (
-                self._render_args_table(name, display_args)
-                if display_args
-                else Text("(no args)", style="muted")
-            ),
+            Group(*blocks),
             title=title,
             title_align="left",
-            subtitle=Text("running", style="muted"),
+            subtitle=Text("done" if result.success else "failed", style=status_style),
             subtitle_align="right",
             box=box.ROUNDED,
             border_style=border_style,
