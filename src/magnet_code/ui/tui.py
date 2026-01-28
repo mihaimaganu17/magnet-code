@@ -9,6 +9,7 @@ from rich.table import Table
 from rich import box
 from rich.syntax import Syntax
 
+from magnet_code.config.config import Config
 from magnet_code.tools.base import ToolResult
 from magnet_code.utils.paths import resolve_path
 
@@ -56,15 +57,13 @@ def get_console() -> Console:
 
 
 class TUI:
-    def __init__(
-        self,
-        console: Console | None,
-    ) -> None:
+    def __init__(self, console: Console | None, config: Config) -> None:
+        self.config = config
         self.console = console or get_console()
         # Marks if the assistant stream is currently being streamed up on display
         self._assistant_stream_open = False
         self._tool_args_by_call_id: dict[str, dict[str, Any]] = {}
-        self.cwd = Path.cwd()
+        self.cwd = self.config.cwd
 
     def begin_assistant(self) -> None:
         """Assistant is starting to respond, so we update the internal state for that and print

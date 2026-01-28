@@ -124,7 +124,7 @@ class Agent:
             result = await self.tool_registry.invoke(
                 tool_call.name,
                 tool_call.arguments_delta,
-                Path.cwd(),
+                self.config.cwd(),
             )
 
             # Issue a completed tool call event

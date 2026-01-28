@@ -22,7 +22,7 @@ class CLI:
         self.agent: Agent | None = None
         self.config = config
         # Interface used to display agent actions, workflow and responses
-        self.tui = TUI(console)
+        self.tui = TUI(console, config)
 
     async def run_single(self, message: str) -> str | None:
         """
@@ -38,7 +38,7 @@ class CLI:
             'Magnet',
             lines=[
                 f"model: {self.config.model_name}",
-                f"cwd: {Path.cwd()}",
+                f"cwd: {self.config.cwd}",
                 "commands: /help /config /approval /model /exit",
             ],
         )
