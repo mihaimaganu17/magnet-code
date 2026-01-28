@@ -82,7 +82,7 @@ def load_config(cwd: Path | None) -> Config:
             config_dict = _merge_dicts(config_dict, project_config_dict)
         except ConfigError:
             logger.warning(f"Skipping invalid system config: {system_path}")
-    print(config_dict) 
+
     # If the configuration file does not have a working directory, we make it the execution one.
     if "cwd" not in config_dict:
         config_dict["cwd"] = cwd
