@@ -37,7 +37,7 @@ class CLI:
         self.tui.print_welcome(
             'Magnet',
             lines=[
-                f"model: gpt-5.2",
+                f"model: {self.config.model_name}",
                 f"cwd: {Path.cwd()}",
                 "commands: /help /config /approval /model /exit",
             ],

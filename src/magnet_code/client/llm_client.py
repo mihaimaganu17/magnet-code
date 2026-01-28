@@ -72,7 +72,7 @@ class LLMClient:
 
         # TODO: Temporary hard coded value for the model, which will be replaced by a configurable
         # setting
-        model = "gpt-5.2"
+        model = self.config.model_name
         # Arguments to handel configuration, content and options for the LLM request
         kwargs = {"model": model, "messages": messages, "stream": stream}
 

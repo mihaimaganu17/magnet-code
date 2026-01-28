@@ -20,7 +20,7 @@ class Agent:
         self.config = config
         # Create a new LLM client for this agent that will be used to generate responses
         self.client = LLMClient(config)
-        self.context_manager = ContextManager()
+        self.context_manager = ContextManager(config)
         self.tool_registry = create_default_registry()
 
     async def run(self, message: str):

@@ -1,4 +1,5 @@
 from typing import Any
+from magnet_code.config.config import Config
 from magnet_code.prompts.system import get_system_prompt
 from dataclasses import dataclass, field
 
@@ -29,8 +30,9 @@ class MessageItem:
 
 
 class ContextManager:
-    def __init__(self) -> None:
-        self._model_name = "gpt-o1"
+    def __init__(self, config: Config) -> None:
+        self.config = config
+        self._model_name = config.model_name
         self._system_prompt = get_system_prompt()
         self._messages: list[MessageItem] = []
 
