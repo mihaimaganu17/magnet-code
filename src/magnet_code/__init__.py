@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 import sys
 from typing import Any
 from magnet_code.agent.agent import Agent
@@ -30,9 +31,17 @@ class CLI:
             return await self._process_message(message)
 
     async def run_interactive(self) -> str | None:
+        self.tui.print_welcome(
+            'Magnet',
+            lines=[
+                f"model: gpt-5.2",
+                f"cwd: {Path.cwd()}",
+                "commands: /help /config /approval /model /exit",
+            ],
+        )
         async with Agent() as agent:
             self.agent = agent
-            
+
             while True:
                 try:
                     user_input = console.input("\n[user]>[/user] ").strip()
@@ -54,7 +63,7 @@ class CLI:
         if not tool:
             tool_kind = None
         tool_kind = tool.kind.value
-        
+
         return tool_kind
 
     async def _process_message(self, message: str) -> str | None:
@@ -108,7 +117,7 @@ class CLI:
             elif event.type == AgentEventType.TOOL_CALL_START:
                 # Get the name of the tool
                 tool_name = event.data.get("name", "unknown")
-                
+
                 self.tui.tool_call_start(
                     event.data.get("call_id", ""),
                     tool_name,
@@ -127,7 +136,7 @@ class CLI:
                     event.data.get("metadata"),
                     event.data.get("truncated", False),
                 )
-                
+
         # Return the final response gathered by the agent
         return final_response
 
@@ -146,5 +155,6 @@ def main(
             sys.exit(1)
     else:
         asyncio.run(cli.run_interactive())
+
 
 main()
