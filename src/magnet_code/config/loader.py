@@ -28,6 +28,26 @@ def _parse_toml(path: Path) -> dict[str, Any] | None:
     except (OSError, IOError) as e:
         raise ConfigError("Failed to read config file {path}: {e}", config_file=str(path)) from e
 
+def _get_project_config(cwd: Path) -> Path | None:
+    current = cwd.resolve()
+    agent_dir = current / '.magnet'
+    
+    if agent_dir.is_dir():
+        config_file = agent_dir / CONFIG_FILE_NAME
+        if config_file.is_file():
+            return config_file
+        
+    return None
+
+def _merge_dicts(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    result = base.copy()
+    for key, value in override.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _merge_dicts(result[key], value)
+        else:
+            result[key] = value
+    return result
+
 def load_config(cwd: Path | None) -> Config:
     cwd = cwd or Path.cwd()
     
@@ -35,8 +55,23 @@ def load_config(cwd: Path | None) -> Config:
     
     config_dict: dict[str, Any] = {}
     
+    # Reading the system-wide config file (~/.config/magnet/config.toml)
     if system_path.is_file():
         try:
             config_dict = _parse_toml(system_path)
         except ConfigError:
             logger.warning(f"Skipping invalid system config: {system_path}")
+    
+    # Reading the configuration file in the local directory (.magnet/config.toml)
+    project_path = _get_project_config(cwd)
+    if project_path:
+        try:
+            project_config_dict = _parse_toml(system_path)
+            config_dict = _merge_dicts(config_dict, project_config_dict)
+        except ConfigError:
+            logger.warning(f"Skipping invalid system config: {system_path}")
+    
+    # If the configuration file does not have a working directory, we make it the execution one.
+    if "cwd" not in config_dict:
+        config_dict["cwd"] = cwd
+        
