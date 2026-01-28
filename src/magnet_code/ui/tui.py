@@ -132,7 +132,7 @@ class TUI:
         table.add_column(style="code", overflow="fold")
 
         for key, value in self._ordered_args(tool_name, args):
-            table.add_row(key, value)
+            table.add_row(key, str(value))
 
         return table
 
@@ -255,7 +255,6 @@ class TUI:
                 shown_start = metadata.get("shown_start")
                 shown_end = metadata.get("shown_end")
                 total_lines = metadata.get("total_lines")
-                print(shown_start, shown_end, total_lines)
                 prog_lang = self._guess_language(primary_path)
 
                 header_parts = [str(resolve_path(self.cwd, primary_path))]
@@ -265,7 +264,6 @@ class TUI:
                     header_parts.append(
                         f"lines {shown_start}-{shown_end} of {total_lines} lines"
                     )
-                print(header_parts)
                 header = "".join(header_parts)
                 blocks.append(header)
                 blocks.append(
