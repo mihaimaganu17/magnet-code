@@ -68,8 +68,10 @@ class Agent:
                     response_text += content
                     # And yield a new `AgentEvent` for content progress
                     yield AgentEvent.text_delta(content)
+            # If the client successfuly assembled the tool call, we add it to our tool_calls list
             elif event.type == StreamEventType.TOOL_CALL_COMPLETE:
                 if event.tool_call:
+                    # TODO: Does this work for the non-stream response as well?
                     tool_calls.append(event.tool_call)
             # If it is an error report an agent error event as well.
             elif event.type == StreamEventType.ERROR:
@@ -86,24 +88,28 @@ class Agent:
         tool_call_results: list[ToolResultMessage] = []
         # Execute tool calls
         for tool_call in tool_calls:
+            # Tell the caller we have started a tool call execution
             yield AgentEvent.tool_call_start(
                 tool_call.call_id,
                 tool_call.name,
                 tool_call.arguments_delta,
             )
             
+            # Invoke the tool
             result = await self.tool_registry.invoke(
                 tool_call.name,
                 tool_call.arguments_delta,
                 Path.cwd(),
             )
             
+            # Issue a completed tool call event
             yield AgentEvent.tool_call_complete(
                 tool_call.call_id,
                 tool_call.name,
                 result,
             )
             
+            # Store the tool call results
             tool_call_results.append(
                 ToolResultMessage(
                     tool_call.call_id,
@@ -112,6 +118,8 @@ class Agent:
                 )
             )
 
+        # Add all the tool execution results to the context manager which will be used in the next
+        # request to the LLM.
         for tool_result in tool_call_results:
             self.context_manager.add_tool_result(
                 tool_result.tool_call_id,

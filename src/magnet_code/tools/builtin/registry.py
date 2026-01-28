@@ -42,7 +42,9 @@ class ToolRegistry:
     
     async def invoke(self, name: str, params: dict[str, Any], cwd: Path = None) -> ToolResult:
         """Invoke a tool identified by `name` with the desired `params` in the desired working
-        directory"""
+        directory. If the name does not identify a tool in the current registry or the parameters
+        are not valid for the desired tool or the tool execution fails, an error `ToolResult` is
+        issued."""
         
         # Get the tool by name and check its existence
         tool = self.get(name)

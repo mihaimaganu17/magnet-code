@@ -61,6 +61,8 @@ class ToolResult:
         )
 
     def to_model_output(self) -> str:
+        """If the ToolResult is succesful, returns the output of the tool, otherwise it returns
+        an error. This is such that the model knows what the tool execution has done."""
         if self.success:
             return self.output
         
