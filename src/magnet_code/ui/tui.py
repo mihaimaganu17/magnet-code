@@ -290,7 +290,7 @@ class TUI:
                 output_display = truncate_text(
                     output,
                     "",
-                    240,
+                    self.config.max_tool_output_tokens,
                 )
                 blocks.append(
                     Syntax(

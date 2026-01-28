@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 class ModelConfig(BaseModel):
     name: str = "gpt-5.2"
-    temparature: float = Field(default=1.0, ge=0.0, le=2.0)
+    temperature: float = Field(default=1.0, ge=0.0, le=2.0)
     context_window: int = 400_000
 
 class Config(BaseModel):
