@@ -29,6 +29,17 @@ class CLI:
             # Process the message and return the agent's response
             return await self._process_message(message)
 
+    def _get_tool_kind(self, tool_name: str) -> str | None:
+        tool_kind = None
+        # Get the tool from the avaible tool registry from the agent
+        tool = self.agent.tool_registry.get(tool_name)
+
+        if not tool:
+            tool_kind = None
+        tool_kind = tool.kind.value
+        
+        return tool_kind
+
     async def _process_message(self, message: str) -> str | None:
         """Function to process a single user message given to the agent.
         :return: the final response of the LLM or None if no agent is present
@@ -80,21 +91,25 @@ class CLI:
             elif event.type == AgentEventType.TOOL_CALL_START:
                 # Get the name of the tool
                 tool_name = event.data.get("name", "unknown")
-                tool_kind = None
-                # Get the tool from the avaible tool registry from the agent
-                tool = self.agent.tool_registry.get(tool_name)
-
-                if not tool:
-                    tool_kind = None
-                tool_kind = tool.kind.value
+                
                 self.tui.tool_call_start(
                     event.data.get("call_id", ""),
                     tool_name,
-                    tool_kind,
+                    self._get_tool_kind(tool_name),
                     event.data.get("arguments", {}),
                 )
             elif event.type == AgentEventType.TOOL_CALL_COMPLETE:
                 tool_name = event.data.get("name", "unknown")
+                self.tui.tool_call_complete(
+                    event.data.get("call_id", ""),
+                    tool_name,
+                    self._get_tool_kind(tool_name),
+                    event.data.get("success", False),
+                    event.data.get("output", ""),
+                    event.data.get("error"),
+                    event.data.get("metadata"),
+                    event.data.get("truncated", False),
+                )
                 
         # Return the final response gathered by the agent
         return final_response

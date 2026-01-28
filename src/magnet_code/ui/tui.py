@@ -219,10 +219,20 @@ class TUI:
             ".html": "html",
         }[suffix]
 
-    def tool_call_complete(self, call_id: str, name: str, result: ToolResult) -> None:
-        border_style = "tool"
-        status_icon = "✅" if result.success else "❌"
-        status_style = "success" if result.success else "error"
+    def tool_call_complete(
+        self,
+        call_id: str,
+        name: str,
+        tool_kind: str | None,
+        success: bool,
+        output: str,
+        error: str | None,
+        metadata: dict[str, Any] | None,
+        truncated: bool,
+    ) -> None:
+        border_style = f"tool.{tool_kind}" if tool_kind else "tool"
+        status_icon = "✅" if success else "❌"
+        status_style = "success" if success else "error"
 
         title = Text.assemble(
             (status_icon, status_style),
@@ -233,31 +243,31 @@ class TUI:
 
         primary_path = None
         blocks = []
-        if isinstance(result.metadata, dict) and isinstance(
-            result.metadata.get("path"), str
+        if isinstance(metadata, dict) and isinstance(
+            metadata.get("path"), str
         ):
-            primary_path = result.metadata.get("path")
+            primary_path = metadata.get("path")
 
-        if name == "read_file" and result.success:
+        if name == "read_file" and success:
             if primary_path:
-                start_line, code = self._extract_read_file_code(result.output)
+                start_line, code = self._extract_read_file_code(output)
 
-                shown_start = result.metadata.get("shown_start")
-                shown_end = result.metadata.get("shown_end")
-                total_lines = result.metadata.get("total_lines")
+                shown_start = metadata.get("shown_start")
+                shown_end = metadata.get("shown_end")
+                total_lines = metadata.get("total_lines")
+                print(shown_start, shown_end, total_lines)
                 prog_lang = self._guess_language(primary_path)
 
-                blocks.append(Text())
-                header_parts = resolve_path(self.cwd, primary_path)
+                header_parts = [str(resolve_path(self.cwd, primary_path))]
                 header_parts.append(" 🔵 ")
 
                 if shown_start and shown_end and total_lines:
                     header_parts.append(
-                        f"lines {shown_start}-{shown_end} of total_lines"
+                        f"lines {shown_start}-{shown_end} of {total_lines} lines"
                     )
-
+                print(header_parts)
                 header = "".join(header_parts)
-                blocks.append(Text())
+                blocks.append(header)
                 blocks.append(
                     Syntax(
                         code,
@@ -270,7 +280,7 @@ class TUI:
                 )
             else:
                 output_display = truncate_text(
-                    result.output,
+                    output,
                     "",
                     240,
                 )
@@ -283,14 +293,14 @@ class TUI:
                     )
                 )
 
-        if result.truncated:
+        if truncated:
             blocks.append(Text("note: tool output was truncated", style="warning"))
 
         panel = Panel(
             Group(*blocks),
             title=title,
             title_align="left",
-            subtitle=Text("done" if result.success else "failed", style=status_style),
+            subtitle=Text("done" if success else "failed", style=status_style),
             subtitle_align="right",
             box=box.ROUNDED,
             border_style=border_style,
