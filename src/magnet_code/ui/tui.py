@@ -51,7 +51,7 @@ class TUI:
         console: Console | None,
     ) -> None:
         self.console = console or get_console()
-        # Marks if the assistant stream should currently start building up on display
+        # Marks if the assistant stream is currently being streamed up on display
         self._assistant_stream_open = False
         self._tool_args_by_call_id: dict[str, dict[str, Any]] = {}
 
@@ -63,6 +63,8 @@ class TUI:
         self._assistant_stream_open = True
 
     def end_assistant(self) -> None:
+        """Assistant has finished streaming the response so we update the internal state
+        accordingly"""
         if self._assistant_stream_open:
             self.console.print()
         self._assistant_stream_open = False
@@ -72,19 +74,37 @@ class TUI:
         self.console.print(content, end="", markup=False)
         
     def _ordered_args(self, tool_name: str, args: dict[str, Any]) -> list[tuple]:
+        # TODO: Document the parameters of this function
+        """Order the arguments from a tool call received from the model in a preferred order
+        depending on the tool
+        
+        :param tool_name: name of the tool that is being called
+        :param args: argument dict where each key is the argument name and each value is the value
+        of the argument
+        :return: list of tuples ordered in the prefered order where each tuple has the following
+        elements:
+            argument name
+            argument value
+        """
         _PREFERRED_ORDER = {
             'read_file': ['path', 'offset', 'limit'],
         }
+        
         preferred = _PREFERRED_ORDER.get(tool_name, [])
         
+        # Keeps a list of ordered arguments and their value in a tuple
         ordered: list[tuple[str, Any]] = []
+        # Keeps track of the seen arguments, such that if the preferred order of argument is
+        # non-exhaustive, we do not miss additional arguments
         seen = set()
         
+        # Process the preferred arguments first
         for key in preferred:
             if key in args:
                 ordered.append((key, args[key]))
                 seen.add(key)
                 
+        # Process the rest of the argumenst
         remaining_keys = set(args.keys() - seen)
         for key in remaining_keys:
             if key in args:
@@ -94,8 +114,12 @@ class TUI:
                 
         
     def _render_args_table(self, tool_name: str, args: dict[str, Any]) -> Table:
+        """Render an arguments table for of a function call to display in the TUI
+        """
         table = Table.grid(padding=(0,1))
+        # Argument name column
         table.add_column(style='muted', justify='right', no_wrap=True)
+        # Argument value column
         table.add_column(style='code', overflow="fold")
         
         for key, value in self._orderd_args(tool_name, args):
