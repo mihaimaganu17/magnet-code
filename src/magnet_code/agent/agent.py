@@ -10,14 +10,16 @@ from magnet_code.client.response import (
     ToolCall,
     ToolResultMessage,
 )
+from magnet_code.config.config import Config
 from magnet_code.context.manager import ContextManager
 from magnet_code.tools.builtin.registry import create_default_registry
 
 
 class Agent:
-    def __init__(self):
+    def __init__(self, config=Config):
+        self.config = config
         # Create a new LLM client for this agent that will be used to generate responses
-        self.client = LLMClient()
+        self.client = LLMClient(config)
         self.context_manager = ContextManager()
         self.tool_registry = create_default_registry()
 

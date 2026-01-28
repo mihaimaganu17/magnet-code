@@ -15,20 +15,22 @@ from magnet_code.client.response import (
     ToolCallDelta,
     parse_tool_call_arguments,
 )
+from magnet_code.config.config import Config
 
 
 class LLMClient:
-    def __init__(self) -> None:
+    def __init__(self, config: Config) -> None:
         self._client: AsyncOpenAI | None = None
         # How many times we should retry if a request to the client fails
         self._max_retries: int = 3
+        self.config = config
 
     def get_client(self) -> AsyncOpenAI:
         # If client is not created, create a new client
         if self._client is None:
             self._client = AsyncOpenAI(
-                api_key=os.environ.get("OPENAI_API_KEY"),
-                base_url=os.environ.get("OPENAI_API_URL"),
+                api_key=self.config.api_key,
+                base_url=self.config.base_url,
             )
         return self._client
 

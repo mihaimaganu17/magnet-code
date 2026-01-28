@@ -9,6 +9,7 @@ from magnet_code.client.llm_client import LLMClient
 
 import click
 
+from magnet_code.config.config import Config
 from magnet_code.config.loader import load_config
 from magnet_code.ui.tui import TUI, get_console
 
@@ -16,9 +17,10 @@ console = get_console()
 
 
 class CLI:
-    def __init__(self):
+    def __init__(self, config: Config):
         # Agent used by this CLI to process user's requests
         self.agent: Agent | None = None
+        self.config = config
         # Interface used to display agent actions, workflow and responses
         self.tui = TUI(console)
 
@@ -26,7 +28,7 @@ class CLI:
         """
         Run a single user message through the agent
         """
-        async with Agent() as agent:
+        async with Agent(self.config) as agent:
             self.agent = agent
             # Process the message and return the agent's response
             return await self._process_message(message)
@@ -40,7 +42,7 @@ class CLI:
                 "commands: /help /config /approval /model /exit",
             ],
         )
-        async with Agent() as agent:
+        async with Agent(self.config) as agent:
             self.agent = agent
 
             while True:
@@ -156,19 +158,19 @@ def main(
 ):
 
     try:
-        config = load_config(cwd)
+        config = load_config(cwd=cwd)
     except Exception as e:
-        console.print(f"[error]Configuration Error: {e}[\error]")
+        console.print(f"[error]Configuration Error: {e}[/error]")
         
     errors = config.validate()
     
     if errors:
         for error in errors:
-            console.print(f"[error]{error}[\error]")
+            console.print(f"[error]{error}[/error]")
         sys.exit(1)
         
     # Create a new CLI
-    cli = CLI()
+    cli = CLI(config)
         
     messages = [{"role": "user", "content": prompt}]
     if prompt:
