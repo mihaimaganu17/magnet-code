@@ -82,12 +82,16 @@ class CLI:
                 tool_name = event.data.get("name", "unknown")
                 tool_kind = None
                 # Get the tool from the avaible tool registry from the agent
-                tool = self.agent.tool_registry(tool_name)
+                tool = self.agent.tool_registry.get(tool_name)
                 
                 if not tool:
                     tool_kind = None
                 tool_kind = tool.kind.value
                 self.tui.tool_call_start(
+                    event.data.get("call_id", ""),
+                    tool_name,
+                    tool_kind,
+                    event.data.get("arguments", {})
                 )
                 
         # Return the final response gathered by the agent            

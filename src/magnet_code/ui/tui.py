@@ -1,12 +1,12 @@
 from pathlib import Path
-from typing import Any, tuple
+from typing import Any
 from rich.console import Console
 from rich.theme import Theme
 from rich.rule import Rule
 from rich.text import Text
 from rich.panel import Panel
 from rich.table import Table
-from rich.box import box
+from rich import box
 
 from magnet_code.utils.paths import resolve_path
 
@@ -125,7 +125,7 @@ class TUI:
         # Argument value column
         table.add_column(style="code", overflow="fold")
 
-        for key, value in self._orderd_args(tool_name, args):
+        for key, value in self._ordered_args(tool_name, args):
             table.add_row(key, value)
 
         return table
