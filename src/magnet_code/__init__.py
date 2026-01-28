@@ -9,6 +9,7 @@ from magnet_code.client.llm_client import LLMClient
 
 import click
 
+from magnet_code.config.loader import load_config
 from magnet_code.ui.tui import TUI, get_console
 
 console = get_console()
@@ -143,11 +144,32 @@ class CLI:
 
 @click.command()
 @click.argument("prompt", required=False)
+@click.option(
+    '--cwd',
+    '-c',
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    help="Current working directory",
+)
 def main(
     prompt: str | None,
+    cwd: Path | None,
 ):
+
+    try:
+        config = load_config(cwd)
+    except Exception as e:
+        console.print(f"[error]Configuration Error: {e}[\error]")
+        
+    errors = config.validate()
+    
+    if errors:
+        for error in errors:
+            console.print(f"[error]{error}[\error]")
+        sys.exit(1)
+        
     # Create a new CLI
     cli = CLI()
+        
     messages = [{"role": "user", "content": prompt}]
     if prompt:
         result = asyncio.run(cli.run_single(prompt))
