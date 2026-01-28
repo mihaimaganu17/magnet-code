@@ -66,7 +66,7 @@ class TUI:
         self._tool_args_by_call_id: dict[str, dict[str, Any]] = {}
         self.cwd = Path.cwd()
 
-    def begin_assitant(self) -> None:
+    def begin_tant(self) -> None:
         """Assistant is starting to respond, so we update the internal state for that and print
         a visual indicator start"""
         self.console.print()
@@ -219,7 +219,6 @@ class TUI:
             ".html": "html",
         }[suffix]
 
-        
     def print_welcome(self, title: str, lines: list[str]) -> None:
         body = "\n".join(lines)
         self.console.print(

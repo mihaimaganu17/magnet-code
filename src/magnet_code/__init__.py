@@ -91,8 +91,8 @@ class CLI:
                 content = event.data.get("content", "")
                 # If the assistant is currently marked as NOT streaming a response
                 if not assistant_streaming:
-                    # Mark up on display that the assitant is starting to respond
-                    self.tui.begin_assitant()
+                    # Mark up on display that the assistant is starting to respond
+                    self.tui.begin_assistant()
                     # Update the local state such that we know the assistant is streaming on display
                     assistant_streaming = True
                 # Print the content we got on the TUI
