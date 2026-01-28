@@ -12,13 +12,14 @@ from magnet_code.ui.tui import TUI, get_console
 
 console = get_console()
 
+
 class CLI:
     def __init__(self):
         # Agent used by this CLI to process user's requests
-        self.agent : Agent | None = None
+        self.agent: Agent | None = None
         # Interface used to display agent actions, workflow and responses
         self.tui = TUI(console)
-    
+
     async def run_single(self, message: str) -> str | None:
         """
         Run a single user message through the agent
@@ -27,7 +28,6 @@ class CLI:
             self.agent = agent
             # Process the message and return the agent's response
             return await self._process_message(message)
-
 
     async def _process_message(self, message: str) -> str | None:
         """Function to process a single user message given to the agent.
@@ -83,7 +83,7 @@ class CLI:
                 tool_kind = None
                 # Get the tool from the avaible tool registry from the agent
                 tool = self.agent.tool_registry.get(tool_name)
-                
+
                 if not tool:
                     tool_kind = None
                 tool_kind = tool.kind.value
@@ -91,10 +91,12 @@ class CLI:
                     event.data.get("call_id", ""),
                     tool_name,
                     tool_kind,
-                    event.data.get("arguments", {})
+                    event.data.get("arguments", {}),
                 )
+            elif event.type == AgentEventType.TOOL_CALL_COMPLETE:
+                tool_name = event.data.get("name", "unknown")
                 
-        # Return the final response gathered by the agent            
+        # Return the final response gathered by the agent
         return final_response
 
 
@@ -105,15 +107,11 @@ def main(
 ):
     # Create a new CLI
     cli = CLI()
-    messages = [
-        {
-            "role": "user",
-            "content": prompt
-        }
-    ]
+    messages = [{"role": "user", "content": prompt}]
     if prompt:
         result = asyncio.run(cli.run_single(prompt))
         if result is None:
             sys.exit(1)
+
 
 main()
