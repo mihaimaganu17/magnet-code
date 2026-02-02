@@ -35,6 +35,41 @@ class ToolConfirmation:
 
 
 @dataclass
+class FileDiff:
+    path: Path
+    old_content: str
+    new_content: str
+
+    is_new_file: bool = False
+    is_deletion: bool = False
+
+    def create_diff(self) -> str:
+        import difflib
+
+        old_lines = self.old_content.splitlines(keepends=True)
+        new_lines = self.new_content.splitlines(keepends=True)
+
+        # We need to add a new line at the end for difflib to work
+        if old_lines and not old_lines[-1].endswith("\n"):
+            old_lines[-1] += "\n"
+
+        if new_lines and not new_lines[-1].endswith("\n"):
+            new_lines[-1] += "\n"
+
+        old_name = "/dev/null" if self.is_new_file else str(self.path)
+        new_name = "/dev/null" if self.is_deletion else str(self.path)
+
+        diff = difflib.unified_diff(
+            old_lines,
+            new_lines,
+            fromfile=old_name,
+            tofile=new_name,
+        )
+
+        return "".join(diff)
+
+
+@dataclass
 class ToolResult:
     success: bool
     output: str
@@ -55,7 +90,13 @@ class ToolResult:
         )
 
     @classmethod
-    def success_result(cls, output: str, metadata: dict[str, Any] = {}, truncated: bool = False, file_diff: FileDiff | None = None):
+    def success_result(
+        cls,
+        output: str,
+        metadata: dict[str, Any] = {},
+        truncated: bool = False,
+        file_diff: FileDiff | None = None,
+    ):
         return cls(
             success=True,
             output=output,
@@ -69,7 +110,7 @@ class ToolResult:
         an error. This is such that the model knows what the tool execution has done."""
         if self.success:
             return self.output
-        
+
         return f"Error: {self.error}\n\nOutput:\n{self.output}"
 
 
