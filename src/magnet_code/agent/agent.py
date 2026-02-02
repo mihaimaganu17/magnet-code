@@ -1,9 +1,8 @@
 from __future__ import annotations
-from pathlib import Path
 from typing import AsyncGenerator
 
 from magnet_code.agent.events import AgentEvent, AgentEventType
-from magnet_code.client.llm_client import LLMClient
+from magnet_code.agent.session import Session
 from magnet_code.client.response import (
     StreamEventType,
     StreamEventType,
@@ -11,17 +10,14 @@ from magnet_code.client.response import (
     ToolResultMessage,
 )
 from magnet_code.config.config import Config
-from magnet_code.context.manager import ContextManager
-from magnet_code.tools.builtin.registry import create_default_registry
 
 
 class Agent:
     def __init__(self, config=Config):
         self.config = config
         # Create a new LLM client for this agent that will be used to generate responses
-        self.client = LLMClient(config)
-        self.context_manager = ContextManager(config)
-        self.tool_registry = create_default_registry()
+        self.session: Session | None = Session(self.config)
+        
 
     async def run(self, message: str):
         """Run the agent one time with the given message. The agent yields events for the start of
@@ -31,7 +27,7 @@ class Agent:
         yield AgentEvent.agent_start(message)
 
         # Add the user message to the context
-        self.context_manager.add_user_message(message)
+        self.session.context_manager.add_user_message(message)
         # Future add-ons:
         #   agent hooks that could run
 
@@ -60,13 +56,13 @@ class Agent:
 
             # Get OpenAI API compatible schema of all the tools in the registry, such that we can add
             # them to the LLM request and the LLM knows which tools are available for calling
-            tool_schemas = self.tool_registry.get_schemas()
+            tool_schemas = self.session.tool_registry.get_schemas()
             # Keep track of the list of tool calls the LLM sends back as response
             tool_calls: list[ToolCall] = []
 
             # Issue a chat completion request to the LLM client and handle the yielded events
-            async for event in self.client.chat_completion(
-                self.context_manager.get_messages(),
+            async for event in self.session.client.chat_completion(
+                self.session.context_manager.get_messages(),
                 tools=tool_schemas if tool_schemas else None,
                 stream=True,
             ):
@@ -88,7 +84,7 @@ class Agent:
                     yield AgentEvent.agent_error(event.error or "Unknown error occurred.")
 
             # Add the response as an asssitant message
-            self.context_manager.add_assistant_message(
+            self.session.context_manager.add_assistant_message(
                 response_text or None,
                 (
                     [
@@ -127,7 +123,7 @@ class Agent:
                 )
 
                 # Invoke the tool
-                result = await self.tool_registry.invoke(
+                result = await self.session.tool_registry.invoke(
                     tool_call.name,
                     tool_call.arguments_delta,
                     self.config.cwd,
@@ -152,7 +148,7 @@ class Agent:
             # Add all the tool execution results to the context manager which will be used in the next
             # request to the LLM.
             for tool_result in tool_call_results:
-                self.context_manager.add_tool_result(
+                self.session.context_manager.add_tool_result(
                     tool_result.tool_call_id,
                     tool_result.content,
                 )
@@ -163,6 +159,6 @@ class Agent:
 
     async def __aexit__(self, exc_type, exc_value, traceback) -> None:
         """Python helper function to close a context handler used by `with` statements"""
-        if self.client:
-            await self.client.close()
-            self.client = None
+        if self.session and self.session.client:
+            await self.session.client.close()
+            self.session = None

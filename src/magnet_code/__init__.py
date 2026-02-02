@@ -64,7 +64,7 @@ class CLI:
     def _get_tool_kind(self, tool_name: str) -> str | None:
         tool_kind = None
         # Get the tool from the avaible tool registry from the agent
-        tool = self.agent.tool_registry.get(tool_name)
+        tool = self.agent.session.tool_registry.get(tool_name)
 
         if not tool:
             tool_kind = None
