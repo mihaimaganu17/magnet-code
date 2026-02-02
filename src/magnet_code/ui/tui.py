@@ -98,6 +98,7 @@ class TUI:
         """
         _PREFERRED_ORDER = {
             "read_file": ["path", "offset", "limit"],
+            "write_file": ["path", "create_directories", "content"],
         }
 
         preferred = _PREFERRED_ORDER.get(tool_name, [])
@@ -131,6 +132,13 @@ class TUI:
         table.add_column(style="code", overflow="fold")
 
         for key, value in self._ordered_args(tool_name, args):
+            if isinstance(value, str):
+                # Handling huge blobs of text for display
+                if key in {"content", "old_string", "new_string"}:
+                    line_count = len(value.splitlines()) or 0
+                    byte_count = len(value.encode("utf-8", errors="replace"))
+                    value = f"<{line_count} lines ⚔ {byte_count} bytes>"
+
             table.add_row(key, str(value))
 
         return table
@@ -261,7 +269,7 @@ class TUI:
         )
 
         primary_path = None
-        
+
         # Keeps track of the blocks to be rendered
         blocks = []
         if isinstance(metadata, dict) and isinstance(metadata.get("path"), str):
@@ -271,7 +279,7 @@ class TUI:
             if primary_path:
                 start_line, code = self._extract_read_file_code(output)
 
-                # Get the display parameters from the `metadata` field emitted by the read_file tool. 
+                # Get the display parameters from the `metadata` field emitted by the read_file tool.
                 shown_start = metadata.get("shown_start")
                 shown_end = metadata.get("shown_end")
                 total_lines = metadata.get("total_lines")
