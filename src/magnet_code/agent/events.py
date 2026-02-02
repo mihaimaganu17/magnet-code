@@ -105,6 +105,7 @@ class AgentEvent:
                 "output": result.output,
                 "error": result.error,
                 "metadata": result.metadata,
+                "diff": result.diff,
                 "truncated": result.truncated,
             },
         )

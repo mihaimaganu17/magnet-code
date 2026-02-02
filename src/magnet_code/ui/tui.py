@@ -10,7 +10,7 @@ from rich import box
 from rich.syntax import Syntax
 
 from magnet_code.config.config import Config
-from magnet_code.tools.base import ToolResult
+from magnet_code.tools.base import FileDiff, ToolResult
 from magnet_code.utils.paths import resolve_path
 
 import re
@@ -64,6 +64,7 @@ class TUI:
         self._assistant_stream_open = False
         self._tool_args_by_call_id: dict[str, dict[str, Any]] = {}
         self.cwd = self.config.cwd
+        self._max_block_tokens = 240
 
     def begin_assistant(self) -> None:
         """Assistant is starting to respond, so we update the internal state for that and print
@@ -253,6 +254,7 @@ class TUI:
         output: str,
         error: str | None,
         metadata: dict[str, Any] | None,
+        diff: str | None,
         truncated: bool,
     ) -> None:
         """Display the result of the tool call after it's completiong along with some information
@@ -310,7 +312,7 @@ class TUI:
                 output_display = truncate_text(
                     output,
                     "",
-                    self.config.max_tool_output_tokens,
+                    self._max_block_tokens,
                 )
                 blocks.append(
                     Syntax(
@@ -320,6 +322,14 @@ class TUI:
                         word_wrap=False,
                     )
                 )
+        elif name == "write_file" and success and diff:
+            output_line = output.strip() if output else "Completed"
+            blocks.append(Text(output_line, style="muted"))
+            diff_text = diff
+            diff_display = truncate_text(
+                diff_text, self.config.model_name, self._max_block_tokens
+            )
+            blocks.append(Syntax(diff_display, "diff", theme="vim", word_wrap=True))
 
         if truncated:
             blocks.append(Text("note: tool output was truncated", style="warning"))
