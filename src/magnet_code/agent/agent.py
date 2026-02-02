@@ -51,6 +51,8 @@ class Agent:
         max_turns = self.config.max_turns
         
         for turn_num in range(max_turns):
+            # Keeping track of turns in the session
+            self.session.increment_turn()
             # Initial variable where we accumulate the response from the LLM
             response_text = ""
 

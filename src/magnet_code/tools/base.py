@@ -40,7 +40,10 @@ class ToolResult:
     output: str
     error: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+
+    # Fields useful for tool implementations
     truncated: bool = False
+    diff: FileDiff | None = None
 
     @classmethod
     def error_result(cls, error: str, output: str = "", **kwargs: Any):
@@ -52,12 +55,13 @@ class ToolResult:
         )
 
     @classmethod
-    def success_result(cls, output: str, metadata: dict[str, Any] = {}, truncated: bool = False):
+    def success_result(cls, output: str, metadata: dict[str, Any] = {}, truncated: bool = False, file_diff: FileDiff | None = None):
         return cls(
             success=True,
             output=output,
             metadata=metadata,
             truncated=truncated,
+            diff=file_diff,
         )
 
     def to_model_output(self) -> str:
