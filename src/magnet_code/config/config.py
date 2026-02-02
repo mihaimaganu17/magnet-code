@@ -44,6 +44,8 @@ class Config(BaseModel):
         self.model.temparature = value
         
     def validate(self) -> list[str]:
+        """Validates if essential options like API_KEY and working directory are present in the
+        configuration."""
         errors: list[str] = []
         
         if not self.api_key:

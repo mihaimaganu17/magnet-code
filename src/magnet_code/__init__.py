@@ -34,6 +34,9 @@ class CLI:
             return await self._process_message(message)
 
     async def run_interactive(self) -> str | None:
+        """Run the `magnet-code` in interactive mode. This allows the user to input multiple prompts
+        while the agent also keeps track of previous context."""
+        # Print welcome message when running the interactive mode
         self.tui.print_welcome(
             'Magnet',
             lines=[
@@ -157,11 +160,13 @@ def main(
     cwd: Path | None,
 ):
 
+    # Load the configuration file or use default settings
     try:
         config = load_config(cwd=cwd)
     except Exception as e:
         console.print(f"[error]Configuration Error: {e}[/error]")
         
+    # Validate the config and fail if there are any validation errors
     errors = config.validate()
     
     if errors:

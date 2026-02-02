@@ -138,6 +138,8 @@ class TUI:
     def tool_call_start(
         self, call_id: str, name: str, tool_kind: str | None, arguments: dict[str, Any]
     ) -> None:
+        """Prints the tool call name, ID, lists argument names and their values to be easily
+        identified by the user"""
         self._tool_args_by_call_id[call_id] = arguments
         border_style = f"tool.{tool_kind}" if tool_kind else "tool"
 
@@ -173,6 +175,8 @@ class TUI:
         self.console.print(panel)
 
     def _extract_read_file_code(self, text: str) -> tuple[int, str] | None:
+        """Extracts from the ouput of the LLM, the start line that the read_file tool read and
+        the code lines read"""
         body = text
         header_match = re.match(r"^Showing lines (\d+)-(\d+) of (\d+)\n\n", text)
 
@@ -198,6 +202,7 @@ class TUI:
         return start_line, "\n".join(code_lines)
 
     def _guess_language(self, path: str | None) -> str:
+        """Guess the programming language from the file extension of the `path`"""
         if not path:
             return "text"
         suffix = Path(path).suffix.lower()
@@ -242,6 +247,8 @@ class TUI:
         metadata: dict[str, Any] | None,
         truncated: bool,
     ) -> None:
+        """Display the result of the tool call after it's completiong along with some information
+        about the tool call (metadata)."""
         border_style = f"tool.{tool_kind}" if tool_kind else "tool"
         status_icon = "✅" if success else "❌"
         status_style = "success" if success else "error"
@@ -254,6 +261,8 @@ class TUI:
         )
 
         primary_path = None
+        
+        # Keeps track of the blocks to be rendered
         blocks = []
         if isinstance(metadata, dict) and isinstance(metadata.get("path"), str):
             primary_path = metadata.get("path")
@@ -262,14 +271,17 @@ class TUI:
             if primary_path:
                 start_line, code = self._extract_read_file_code(output)
 
+                # Get the display parameters from the `metadata` field emitted by the read_file tool. 
                 shown_start = metadata.get("shown_start")
                 shown_end = metadata.get("shown_end")
                 total_lines = metadata.get("total_lines")
                 prog_lang = self._guess_language(primary_path)
 
+                # Construct the header with the path of the file
                 header_parts = [str(resolve_path(self.cwd, primary_path))]
                 header_parts.append(" 🔵 ")
 
+                # Information about the lines shown
                 if shown_start and shown_end and total_lines:
                     header_parts.append(
                         f"lines {shown_start}-{shown_end} of {total_lines} lines"
@@ -304,6 +316,7 @@ class TUI:
         if truncated:
             blocks.append(Text("note: tool output was truncated", style="warning"))
 
+        # Group all blocks into a panel
         panel = Panel(
             Group(*blocks),
             title=title,
