@@ -12,7 +12,7 @@ def get_tokenizer(model: str):
 
 def count_tokens(text: str, model: str) -> int:
     tokenizer = get_tokenizer(model)
-    print(text)
+    
     if tokenizer:
         if text is None:
             return 0
