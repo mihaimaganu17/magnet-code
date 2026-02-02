@@ -25,7 +25,7 @@ class WriteFileTool(Tool):
     schema = WriteFileParams
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
-        params = WriteFileParams(**invocation.params)
+        params = WriteFileParams(**invocation.parameters)
         path = resolve_path(invocation.cwd, params.path)
 
         # Read potential existing content if the file already exists

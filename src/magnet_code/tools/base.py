@@ -95,14 +95,14 @@ class ToolResult:
         output: str,
         metadata: dict[str, Any] = {},
         truncated: bool = False,
-        file_diff: FileDiff | None = None,
+        diff: FileDiff | None = None,
     ):
         return cls(
             success=True,
             output=output,
             metadata=metadata,
             truncated=truncated,
-            diff=file_diff,
+            diff=diff,
         )
 
     def to_model_output(self) -> str:
