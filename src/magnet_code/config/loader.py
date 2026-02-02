@@ -41,6 +41,7 @@ def _get_project_config(cwd: Path) -> Path | None:
     return None
 
 def _get_agent_md_files(cwd: Path) -> Path | None:
+    """Reads any `AGENTS.md` file present in the current working directory"""
     current = cwd.resolve()
     
     if current.is_dir():
@@ -52,15 +53,25 @@ def _get_agent_md_files(cwd: Path) -> Path | None:
     return None
 
 def _merge_dicts(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    """Merge the 2 given dictionaries. We start with the `base` dictionary and if we find any
+    overlapping items in the `override` one, we override it"""
+    # The base is our starting point
     result = base.copy()
+    
+    # For each key in the override dict
     for key, value in override.items():
+        # If the key is present in result and it's value is another dictionary
         if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            # Recursively resolve it as a merge as well
             result[key] = _merge_dicts(result[key], value)
         else:
+            # Otherwise, simple assignment
             result[key] = value
     return result
 
 def load_config(cwd: Path | None) -> Config:
+    """Load a magnet configuration file from the specified path or one of the default paths (system)
+    of local relative `.magnet/config.toml` paths"""
     cwd = cwd or Path.cwd()
     
     system_path = get_system_config_path()
@@ -79,11 +90,15 @@ def load_config(cwd: Path | None) -> Config:
     if project_path:
         try:
             project_config_dict = _parse_toml(project_path)
+            # The local relative config file takes precedence (overrides) the system one and we send
+            # the two to be merged together with that in mind
             config_dict = _merge_dicts(config_dict, project_config_dict)
         except ConfigError:
             logger.warning(f"Skipping invalid system config: {system_path}")
 
-    # If the configuration file does not have a working directory, we make it the execution one.
+    # If the configuration file does not have a working directory for the agent's execution, we
+    # make the directory of the configuration file or the curren execution directory of the
+    # `magnet-code` binary
     if "cwd" not in config_dict:
         config_dict["cwd"] = cwd
 
@@ -93,6 +108,7 @@ def load_config(cwd: Path | None) -> Config:
             config_dict["developer_instructions"] = agent_md_content
             
     try:
+        # Instatiate our config with the desired options
         config = Config(**config_dict)
     except Exception as e:
         raise ConfigError(f"Invalid configuration: {e}") from e
