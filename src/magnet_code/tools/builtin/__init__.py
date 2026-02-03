@@ -1,4 +1,5 @@
 from magnet_code.tools.builtin.edit_file import EditTool
+from magnet_code.tools.builtin.glob import GlobTool
 from magnet_code.tools.builtin.grep import GrepTool
 from magnet_code.tools.builtin.list_dir import ListDirTool
 from magnet_code.tools.builtin.read_file import ReadFileTool
@@ -12,6 +13,7 @@ __all__ = [
     "ShellTool",
     "ListDirTool",
     "GrepTool",
+    "GlobTool",
 ]
 
 def get_all_builtin_tools() -> list[type]:
@@ -22,4 +24,5 @@ def get_all_builtin_tools() -> list[type]:
         ShellTool,
         ListDirTool,
         GrepTool,
+        GlobTool,
     ]
