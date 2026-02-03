@@ -64,7 +64,7 @@ class TUI:
         self._assistant_stream_open = False
         self._tool_args_by_call_id: dict[str, dict[str, Any]] = {}
         self.cwd = self.config.cwd
-        self._max_block_tokens = 240
+        self._max_block_tokens = 2500
 
     def begin_assistant(self) -> None:
         """Assistant is starting to respond, so we update the internal state for that and print
