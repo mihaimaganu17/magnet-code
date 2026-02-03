@@ -75,6 +75,7 @@ class GrepTool(Tool):
                 metadata={
                     "path": str(search_path),
                     "matches": 0,
+                    "files_searched": len(files),
                 },
             )
 
@@ -83,6 +84,7 @@ class GrepTool(Tool):
             metadata={
                 "path": str(search_path),
                 "matches": matches,
+                "files_searched": len(files),
             },
         )
 
