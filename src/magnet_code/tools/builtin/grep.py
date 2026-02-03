@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 import re
-from networkx import is_path
 from pydantic import BaseModel, Field
 from magnet_code.tools.base import Tool, ToolInvocation, ToolKind, ToolResult
 from magnet_code.utils.paths import is_binary_file, resolve_path
