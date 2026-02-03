@@ -102,6 +102,7 @@ class TUI:
             "write_file": ["path", "create_directories", "content"],
             "edit": ["path", "replace_all", "old_string", "new_string"],
             "shell": ["command", "timeout", "cwd"],
+            "list_dir": ["path", "include_hidden"],
         }
 
         preferred = _PREFERRED_ORDER.get(tool_name, [])
@@ -357,7 +358,31 @@ class TUI:
                 )
             )
 
-            output
+        elif name == "list_dir":
+            entries = metadata.get("entries")
+            path = metadata.get("path")
+            summary = []
+
+            if isinstance(path, str):
+                summary.append(path)
+
+            if isinstance(entries, int):
+                summary.append(f"{entries} entries")
+
+            if summary:
+                blocks.append(Text(" 🔵 ".join(summary), style="muted"))
+
+            output_display = truncate_text(
+                output, self.config.model_name, self._max_block_tokens
+            )
+            blocks.append(
+                Syntax(
+                    output_display,
+                    "text",
+                    theme="vim",
+                    word_wrap=True,
+                )
+            )
 
         if truncated:
             blocks.append(Text("note: tool output was truncated", style="warning"))
