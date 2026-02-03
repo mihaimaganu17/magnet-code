@@ -16,7 +16,7 @@ class ListDirParams(BaseModel):
 class ListDirTool(Tool):
     name = "list_dir"
     description = "List the contents of a directory"
-    kind = (ToolKind.READ,)
+    kind = ToolKind.READ
     schema = ListDirParams
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
@@ -36,7 +36,7 @@ class ListDirTool(Tool):
 
         # If we do not want to include hidden items, we remove the items starting with `.`
         if not params.include_hidden:
-            items = [item for item in items if not item[1].startswith(".")]
+            items = [item for item in items if not item.name.startswith(".")]
 
         if not items:
             return ToolResult.success_result(
@@ -44,21 +44,20 @@ class ListDirTool(Tool):
                 metadata={"path": str(dir_path), "entries": 0},
             )
 
-        # Reporting lines with the directory listing 
+        # Reporting lines with the directory listing
         lines = []
-        
+
         for item in items:
             # Make sure to let the LLM know which entries are directories and which are files
             if item.is_dir():
                 lines.append(f"{item.name}/")
             else:
                 lines.append(item.name)
-                
+
         return ToolResult.success_result(
             "\n".join(lines),
             metadata={
                 "path": str(dir_path),
                 "entries": len(items),
-            }
+            },
         )
-        
