@@ -388,6 +388,7 @@ class TUI:
         elif name == 'grep' and success:
             matches = metadata.get('matches')
             files_searched = metadata.get("files_searched")
+            summary = []
             
             if isinstance(matches, int):
                 summary.append(f"{matches} matches")
