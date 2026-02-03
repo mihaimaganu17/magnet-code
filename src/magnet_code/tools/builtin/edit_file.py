@@ -70,12 +70,64 @@ class EditTool(Tool):
                 "old_string is empty but file exists. Provide old_string to edit, or use write_file tool instead"
             )
             
-        occurence_count = old_content.count(params.old_string)
+        occurrence_count = old_content.count(params.old_string)
         
         # If the string we are trying to edit is not present in the file, the LLM hallucinates or 
         # does not have the last updated state
-        if occurence_count == 0:
+        if occurrence_count == 0:
             return self._no_match_error(params.old_string, old_content, path)
+
+        if occurrence_count > 1 and not params.replace_all:
+            return ToolResult.error_result(
+                f"old_string found {occurrence_count} times in {path}."
+                f"Either: \n"
+                f"1. Provide more context to make the match unique or\n"
+                f"2. Set replace_all=true to replace all occurrences",
+                metadata={
+                    "ocurrence_count": occurrence_count,
+                }
+            )
+            
+        if params.replace_all:
+            new_content = old_content.replace(params.old_string, params.new_string)
+            replace_count = occurrence_count
+        else:
+            new_content = old_content.replace(params.old_string, params.new_string, 1)
+            replace_count = 1
+            
+        # TODO: Should we do this above by comparing new_string and old_string before replacing?
+        if new_content == old_content:
+            return ToolResult.error_result("No change made - old_string equals new_string")
+        
+        try:
+            path.write_text(new_content, encoding="utf-8")
+        except IOError as e:
+            return ToolResult.error_result(f"Failed to write file: {e}")
+        
+        # Keeps track of how many lines were added / removed
+        old_lines = len(old_content.splitlines())
+        new_lines = len(new_content.splitlines())
+        line_diff = new_lines - old_lines
+        diff_msg = ""
+        
+        if line_diff > 0:
+            diff_msg = f" (+{line_diff} lines)"
+        elif line_diff < 0:
+            diff_msg = f" ({line_diff} lines)"
+        
+        return ToolResult.success_result(
+            f"Edited {path}: replaced: {replace_count} occurrence(s){diff_msg}",
+            diff=FileDiff(
+                path=path,
+                old_content=old_content,
+                new_content=new_content,
+            ),
+            metadata={
+                "path": str(path),
+                "replaced_count": replace_count,
+                "line_diff": line_diff,
+            }
+        )
         
     
     def _no_match_error(self, old_string:str, content: str, path: Path) -> ToolResult:
