@@ -7,6 +7,8 @@ from pydantic.json_schema import model_json_schema
 from enum import Enum
 from typing import Any
 
+from magnet_code.config.config import Config
+
 
 class ToolKind(str, Enum):
     # I/O
@@ -120,8 +122,8 @@ class Tool(abc.ABC):
     description: str = "Base tool"
     kind: ToolKind = ToolKind.READ
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, config: Config) -> None:
+        self.config = config
 
     @property
     def schema(self) -> dict[str, Any] | type[BaseModel]:
