@@ -81,6 +81,7 @@ class ToolResult:
     # Fields useful for tool implementations
     truncated: bool = False
     diff: FileDiff | None = None
+    exit_code: int | None = None
 
     @classmethod
     def error_result(cls, error: str, output: str = "", **kwargs: Any):
