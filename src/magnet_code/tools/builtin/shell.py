@@ -82,7 +82,7 @@ class ShellTool(Tool):
 
         # Create a new process with the shell command
         process = await asyncio.create_subprocess_exec(
-            **shell_cmd,
+            *shell_cmd,
             # Capture the standard output and error
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -128,7 +128,7 @@ class ShellTool(Tool):
             output = output[:100 * 1024] + '\n... [output truncated]'
             
         return ToolResult(
-            success=exit==0,
+            success=exit_code==0,
             error=stderr if exit_code != 0 else None,
             exit_code=exit_code,
             output=output,
