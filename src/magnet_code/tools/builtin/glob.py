@@ -51,6 +51,7 @@ class GlobTool(Tool):
             "\n".join(output_lines),
             metadata={
                 "path": str(search_path),
+                "matches": len(matches),
             },
         )
 
