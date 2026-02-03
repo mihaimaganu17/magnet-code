@@ -10,9 +10,9 @@ class ModelConfig(BaseModel):
 
 
 class ShellEnvironmentPolicy(BaseModel):
-    ignore_default_excludes: bool = (False,)
+    ignore_default_excludes: bool = False
     exclude_patterns: list[str] = Field(
-        default_factory=lambda: ["*KEY*", "*TOKEN", "*SECRET*"]
+        default_factory=lambda: ["*KEY*", "*TOKEN", "*SECRET*", "*SECURITY*"]
     )
     # Overriding variables
     set_vars: dict[str, str] = Field(default_factory=dict)

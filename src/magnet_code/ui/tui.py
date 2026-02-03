@@ -101,6 +101,7 @@ class TUI:
             "read_file": ["path", "offset", "limit"],
             "write_file": ["path", "create_directories", "content"],
             "edit": ["path", "replace_all", "old_string", "new_string"],
+            "shell": ["command", "timeout", "cwd"],
         }
 
         preferred = _PREFERRED_ORDER.get(tool_name, [])
@@ -257,6 +258,7 @@ class TUI:
         metadata: dict[str, Any] | None,
         diff: str | None,
         truncated: bool,
+        exit_code: int | None,
     ) -> None:
         """Display the result of the tool call after it's completiong along with some information
         about the tool call (metadata)."""
@@ -270,6 +272,9 @@ class TUI:
             ("  ", "muted"),
             (f"#{call_id[:8]}", "muted"),
         )
+
+        # Get the arguments for this tool call id
+        args = self._tool_args_by_call_id.get(call_id, {})
 
         primary_path = None
 
@@ -323,7 +328,7 @@ class TUI:
                         word_wrap=False,
                     )
                 )
-        elif name in { "write_file" , "edit" } and success and diff:
+        elif name in {"write_file", "edit"} and success and diff:
             output_line = output.strip() if output else "Completed"
             blocks.append(Text(output_line, style="muted"))
             diff_text = diff
@@ -331,6 +336,28 @@ class TUI:
                 diff_text, self.config.model_name, self._max_block_tokens
             )
             blocks.append(Syntax(diff_display, "diff", theme="vim", word_wrap=True))
+
+        elif name == "shell":
+            command = args.get("command")
+            if isinstance(command, str) and command.strip():
+                blocks.append(Text(f"$ {command.strip()}", style="muted"))
+
+            if exit_code is not None:
+                blocks.append(Text(f"exit_code={exit_code}", style="muted"))
+
+            output_display = truncate_text(
+                output, self.config.model_name, self._max_block_tokens
+            )
+            blocks.append(
+                Syntax(
+                    output_display,
+                    "text",
+                    theme="vim",
+                    word_wrap=True,
+                )
+            )
+
+            output
 
         if truncated:
             blocks.append(Text("note: tool output was truncated", style="warning"))

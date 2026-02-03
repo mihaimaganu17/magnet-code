@@ -43,7 +43,7 @@ class ShellTool(Tool):
     schema = ShellParams
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
-        params = ShellParams(**invocation.params)
+        params = ShellParams(**invocation.parameters)
 
         command = params.command.lower().strip()
         for blocked in BLOCKED_COMMANDS:
@@ -73,6 +73,12 @@ class ShellTool(Tool):
             shell_cmd = ["cmd.exe", "/c", params.command]
         else:
             shell_cmd = ["/bin/bash", "-c", params.command]
+
+        # Print the shell environment and command and allow the user to press enter before
+        # continuing
+        print(env)
+        print(shell_cmd)
+        input("Press Enter to continue...")
 
         # Create a new process with the shell command
         process = await asyncio.create_subprocess_exec(
