@@ -55,7 +55,7 @@ class GrepTool(Tool):
             lines = content.splitlines()
             file_matches = False
 
-            for i, line in enumerate(lines):
+            for i, line in enumerate(lines, start=1):
                 if pattern.search(line):
                     # If a file matches, mark it and append it to the output
                     if not file_matches:
