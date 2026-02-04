@@ -13,10 +13,10 @@ CONFIG_FILE_NAME = "config.toml"
 AGENT_MD_FILE = "agent.md"
 
 def get_config_dir() -> Path:
-    return Path(user_config_dir('magnet'))
+    return Path(user_config_dir())
 
 def get_data_dir() -> Path:
-    return Path(user_data_dir("ai-agent"))
+    return Path(user_data_dir(".magnet"))
 
 def get_system_config_path() -> Path:
     return get_config_dir() / CONFIG_FILE_NAME
