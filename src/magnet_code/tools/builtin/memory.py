@@ -64,40 +64,45 @@ class MemoryTool(Tool):
         elif params.action.lower() == "get":
             if not params.key:
                 return ToolResult.error_result("`key` required for `get` action")
-            
+
             memory = self._load_memory()
-            if params.key not in memory['entries']:
-                return ToolResult.success_result(f"Memory not found: {params.key}")
-            
-            return ToolResult.success_result(f"Memory found: {params.key}: {memory['entries'][params.key]}")
-            
+            if params.key not in memory.get("entries", {}):
+                return ToolResult.success_result(
+                    f"Memory not found: {params.key}", metadata={"found": False}
+                )
+
+            return ToolResult.success_result(
+                f"Memory found: {params.key}: {memory['entries'][params.key]}",
+                metadata={"found": True},
+            )
+
         elif params.action.lower() == "delete":
             if not self.key:
                 return ToolResult.error_result("`key` required for `get` action")
             memory = self._load_memory()
 
-            if params.key not in memory['entries']:
+            if params.key not in memory.get("entries", []):
                 return ToolResult.success_result(f"Memory not found: {params.key}")
 
-            del memory['entries'][params.key]
+            del memory["entries"][params.key]
             self._save_memory(memory)
-            
+
             return ToolResult.success_result(f"Memory deleted: {params.key}")
 
         elif params.action.lower() == "list":
             memory = self._load_memory()
-            entries = memory.get('entries', {})
-            
+            entries = memory.get("entries", {})
+
             if not entries:
-                return ToolResult.success_result(f"No memories stored")
+                return ToolResult.success_result(f"No memories stored", metadata={"found": False})
             lines = [f"Stored memories:"]
             for key, value in sorted(entries.items()):
                 lines.append(f"  {key}: {value}")
-                
-            return ToolResult.success_result("\n".join(lines))
-        elif params.action.lower() == "clear": 
+
+            return ToolResult.success_result("\n".join(lines), metadata={"found": False})
+        elif params.action.lower() == "clear":
             memory = self._load_memory()
-            count = len(memory.get('entries', {}))
+            count = len(memory.get("entries", {}))
             memory["entries"] = {}
             self._save_memory(memory)
             return ToolResult.success_result(f"Cleared {count} memory entries")
