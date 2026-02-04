@@ -32,7 +32,7 @@ class ToolDiscoveryManager:
         return module
 
     def _find_tool_classes(self, module: Any) -> list[Tool]:
-        tools: list[Tool] = {}
+        tools: list[Tool] = []
 
         for name in dir(module):
             obj = getattr(module, name)  # module.name
@@ -46,7 +46,7 @@ class ToolDiscoveryManager:
                 and obj.__module__ == module.__name__
             ):
                 tools.append(obj)
-        
+
         return tools
                 
 
