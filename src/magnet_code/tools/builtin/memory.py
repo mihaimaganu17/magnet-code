@@ -50,7 +50,7 @@ class MemoryTool(Tool):
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = MemoryParams(**invocation.parameters)
 
-        if params.acction.lower() == "set":
+        if params.action.lower() == "set":
             if not params.key or not params.value:
                 return ToolResult.error_result(
                     "`key` and `value` are required for `set` action"

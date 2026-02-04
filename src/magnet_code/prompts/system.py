@@ -4,7 +4,7 @@ import platform
 from magnet_code.config.config import Config
 
 
-def get_system_prompt(config: Config) -> str:
+def get_system_prompt(config: Config, user_memory: str | None = None) -> str:
     parts = []
 
     # Identity and role
@@ -24,6 +24,9 @@ def get_system_prompt(config: Config) -> str:
         
     if config.user_instructions:
         parts.append(_get_user_instructions_section(config.user_instructions))
+        
+    if user_memory:
+        parts.append(_get_memory_section(user_memory))
 
     parts.append(_get_operational_section())
 
@@ -46,6 +49,16 @@ def _get_user_instructions_section(instructions: str) -> str:
 The user has provided the following custom instructions:
 
 {instructions}"""
+
+def _get_memory_section(memory: str) -> str:
+    """Generate user memory section."""
+    return f"""# Remembered Context
+
+The following information has been stored from previous interactions:
+
+{memory}
+
+Use this information to personalize your responses and maintain consistency."""
 
 
 def _get_identity_section() -> str:

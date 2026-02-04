@@ -30,10 +30,10 @@ class MessageItem:
 
 
 class ContextManager:
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, user_memory: str | None = None) -> None:
         self.config = config
         self._model_name = config.model_name
-        self._system_prompt = get_system_prompt(self.config)
+        self._system_prompt = get_system_prompt(self.config, user_memory=user_memory)
         self._messages: list[MessageItem] = []
 
     def add_user_message(self, content: str) -> None:
