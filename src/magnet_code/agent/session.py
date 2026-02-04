@@ -6,6 +6,7 @@ from magnet_code.config.config import Config
 from magnet_code.config.loader import get_data_dir
 from magnet_code.context.manager import ContextManager
 from magnet_code.tools.builtin.registry import create_default_registry
+from magnet_code.tools.discovery import ToolDiscoveryManager
 
 
 class Session:
@@ -18,9 +19,12 @@ class Session:
             user_memory=self._load_memory(),
             tools=self.tool_registry.get_tools(),
         )
+        self.discovery_manager = ToolDiscoveryManager(config, self.tool_registry)
         self.session_id = str(uuid.uuid4())
         self.created_at = datetime.datetime.now()
         self.updated_at = datetime.datetime.now()
+        
+        self.discovery_manager.discover_all()
 
         # How many turns have been taking place in the session
         self._turn_count = 0
