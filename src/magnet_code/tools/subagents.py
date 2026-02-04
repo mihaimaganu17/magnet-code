@@ -137,6 +137,13 @@ CODE_REVIEWER = SubagentDefinition(
     constructive feedback. Look for bugs, code smells, security issues, and improvement opportunities.
     Use read_file, list_dir and grep to examine the code. Do NOT modify any files.
     """,
-    allowed_tools=["read_file", "grep", "glob", "list_dir"],
+    allowed_tools=["read_file", "grep", "list_dir"],
     max_turns=15,
+    timeout_seconds=300,
 )
+
+def get_default_subagent_defintions() -> list[SubagentDefinition]:
+    return [
+        CODEBASE_INVESTIGATOR,
+        CODE_REVIEWER,
+    ]

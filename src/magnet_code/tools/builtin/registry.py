@@ -4,6 +4,7 @@ from typing import Any
 from magnet_code.config.config import Config
 from magnet_code.tools.base import Tool, ToolInvocation, ToolResult
 from magnet_code.tools.builtin import ReadFileTool, get_all_builtin_tools
+from magnet_code.tools.subagents import SubAgentTool, get_default_subagent_defintions
 
 logger = logging.getLogger(__name__)
 
@@ -92,5 +93,8 @@ def create_default_registry(config: Config) -> ToolRegistry:
     
     for tool_class in get_all_builtin_tools():
         registry.register(tool_class(config))
+        
+    for subagent_def in get_default_subagent_defintions():
+        registry.register(SubAgentTool(config, subagent_def))
     
     return registry
