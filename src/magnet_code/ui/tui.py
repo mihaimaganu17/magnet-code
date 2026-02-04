@@ -477,6 +477,17 @@ class TUI:
                 )
             )
 
+        elif name == "todos" and success:
+            output_display = truncate_text(output, self.config.model_name, self._max_block_tokens)
+            blocks.append(
+                Syntax(
+                    output_display,
+                    "text",
+                    theme="vim",
+                    word_wrap=True,
+                )
+            )
+
         if error and not success:
             blocks.append(Text(error, style='error'))
             
