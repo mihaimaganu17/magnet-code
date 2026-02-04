@@ -3,6 +3,7 @@ from magnet_code.config.config import Config
 from magnet_code.prompts.system import get_system_prompt
 from dataclasses import dataclass, field
 
+from magnet_code.tools.base import Tool
 from magnet_code.utils.text import count_tokens
 
 
@@ -30,10 +31,10 @@ class MessageItem:
 
 
 class ContextManager:
-    def __init__(self, config: Config, user_memory: str | None = None) -> None:
+    def __init__(self, config: Config, user_memory: str | None, tools: list[Tool] | None) -> None:
         self.config = config
         self._model_name = config.model_name
-        self._system_prompt = get_system_prompt(self.config, user_memory=user_memory)
+        self._system_prompt = get_system_prompt(self.config, user_memory, tools)
         self._messages: list[MessageItem] = []
 
     def add_user_message(self, content: str) -> None:

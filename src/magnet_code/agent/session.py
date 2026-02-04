@@ -12,11 +12,12 @@ class Session:
     def __init__(self, config: Config):
         self.config = config
         self.client = LLMClient(config)
+        self.tool_registry = create_default_registry(self.config)
         self.context_manager = ContextManager(
             config,
             user_memory=self._load_memory(),
+            tools=self.tool_registry.get_tools(),
         )
-        self.tool_registry = create_default_registry(self.config)
         self.session_id = str(uuid.uuid4())
         self.created_at = datetime.datetime.now()
         self.updated_at = datetime.datetime.now()
