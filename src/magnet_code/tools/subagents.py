@@ -3,8 +3,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from pydantic import BaseModel, Field
-from magnet_code.agent.agent import Agent
-from magnet_code.agent.events import AgentEvent, AgentEventType
 from magnet_code.config.config import Config
 from magnet_code.tools.base import Tool, ToolInvocation, ToolResult
 from pydantic import BaseModel
@@ -45,6 +43,9 @@ class SubAgentTool(Tool):
         return True
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
+        from magnet_code.agent.agent import Agent
+        from magnet_code.agent.events import AgentEventType 
+        
         params = SubagentParams(**invocation.parameters)
 
         if not params.goal:
@@ -95,6 +96,9 @@ class SubAgentTool(Tool):
                         tool_calls.append(event.data.get("name"))
                     elif event.type == AgentEventType.TEXT_COMPLETE:
                         final_response = event.data.get("content")
+                    elif event.type == AgentEventType.AGENT_END:
+                        if final_response is None:
+                            final_response = event.data.get("response")
                     elif event.type == AgentEventType.AGENT_ERROR:
                         error = event.data.get("error", "Unknown")
                         final_response = f"Subagent error: {error}"
