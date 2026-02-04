@@ -50,7 +50,7 @@ class WebSearchTool(Tool):
 
         output_lines = [f"Search results for: {params.query}"]
 
-        for i, result in enumerate(result, start=1):
+        for i, result in enumerate(results, start=1):
             output_lines.append(f"{i}. Title: {result["title"]}")
             output_lines.append(f"     URL: {result["href"]}")
             if result.get("body"):
