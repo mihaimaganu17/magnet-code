@@ -25,6 +25,11 @@ class Config(BaseModel):
         default_factory=ShellEnvironmentPolicy
     )
     max_turns: int = 100
+
+    allowed_tools: list[str] | None = Field(
+        None, description="If set, only these tools will be available for the agent"
+    )
+
     max_tool_output_tokens: int = 50_000
 
     developer_instructions: str | None = None
