@@ -4,6 +4,7 @@ from magnet_code.tools.builtin.grep import GrepTool
 from magnet_code.tools.builtin.list_dir import ListDirTool
 from magnet_code.tools.builtin.read_file import ReadFileTool
 from magnet_code.tools.builtin.shell import ShellTool
+from magnet_code.tools.builtin.todo import TodosTool
 from magnet_code.tools.builtin.web_fetch import WebFetchTool
 from magnet_code.tools.builtin.web_search import WebSearchTool
 from magnet_code.tools.builtin.write_file import WriteFileTool
@@ -18,6 +19,7 @@ __all__ = [
     "GlobTool",
     "WebSearchTool",
     "WebFetchTool",
+    "TodosTool",
 ]
 
 def get_all_builtin_tools() -> list[type]:
@@ -31,4 +33,5 @@ def get_all_builtin_tools() -> list[type]:
         GlobTool,
         WebSearchTool,
         WebFetchTool,
+        TodosTool,
     ]
