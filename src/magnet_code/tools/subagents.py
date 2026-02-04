@@ -115,3 +115,15 @@ class SubAgentTool(Tool):
             return ToolResult.error_result(result)
         
         return ToolResult.success_result(result)
+
+
+CODEBASE_INVESTIGATOR = SubagentDefinition(
+    name="codebase_investigator",
+    description="Invetigates the codebase to answer questions about code structure",
+    goal_prompt="""You are a codebase investigation specialist. You job is to explore and understand
+    code to answer questions. Use read_file, grep, glob, and list_dir to investigate. Do NOT modify
+    any files.
+    """,
+    allowed_tools=["read_file", "grep", "glob", "list_dir"],
+    max_turns=15,
+)
