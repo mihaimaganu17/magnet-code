@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WhatsApp UI Clone</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app" id="app">
+      <aside class="sidebar" aria-label="Chats">
+        <header class="sidebar__header">
+          <div class="sidebar__title">WhatsApp</div>
+          <div class="sidebar__actions">
+            <button class="icon-btn" type="button" aria-label="New chat" title="New chat">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 5a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H6a1 1 0 1 1 0-2h5V6a1 1 0 0 1 1-1Z"
+                />
+              </svg>
+            </button>
+            <button class="icon-btn" type="button" aria-label="Menu" title="Menu">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
+                />
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="sidebar__search">
+          <div class="search">
+            <svg class="search__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M10.5 3a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Zm8.85 14.44 1.21 1.2a1 1 0 0 1-1.41 1.42l-1.21-1.21a1 1 0 0 1 1.41-1.41Z"
+              />
+            </svg>
+            <input
+              id="searchInput"
+              class="search__input"
+              type="search"
+              placeholder="Search or start new chat"
+              autocomplete="off"
+              aria-label="Search chats"
+            />
+          </div>
+        </div>
+
+        <ul class="chat-list" id="chatList" role="list"></ul>
+      </aside>
+
+      <main class="chat" aria-label="Conversation">
+        <header class="chat__header" id="chatHeader">
+          <div class="chat__header-left">
+            <div class="avatar avatar--lg" id="activeAvatar" aria-hidden="true"></div>
+            <div>
+              <div class="chat__name" id="activeName">Select a chat</div>
+              <div class="chat__status" id="activeStatus"> </div>
+            </div>
+          </div>
+          <div class="chat__header-actions">
+            <button class="icon-btn" type="button" aria-label="Search in chat" title="Search">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M10.5 3a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Zm8.85 14.44 1.21 1.2a1 1 0 0 1-1.41 1.42l-1.21-1.21a1 1 0 0 1 1.41-1.41Z"
+                />
+              </svg>
+            </button>
+            <button class="icon-btn" type="button" aria-label="More" title="More">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
+                />
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <section class="messages" id="messages" aria-live="polite" aria-label="Messages">
+          <div class="empty" id="emptyState">
+            <div class="empty__card">
+              <div class="empty__title">WhatsApp UI Clone</div>
+              <div class="empty__text">
+                Select a chat on the left to start messaging. This is a front-end demo with local state.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <form class="composer" id="composer" autocomplete="off">
+          <button class="icon-btn" type="button" aria-label="Emoji" title="Emoji">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20Zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm-3-7a1 1 0 0 1 1 1c0 1.1.9 2 2 2s2-.9 2-2a1 1 0 1 1 2 0c0 2.21-1.79 4-4 4s-4-1.79-4-4a1 1 0 0 1 1-1Zm-1.5-2.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"
+              />
+            </svg>
+          </button>
+          <input
+            class="composer__input"
+            id="messageInput"
+            type="text"
+            placeholder="Message"
+            aria-label="Type a message"
+            disabled
+          />
+          <button
+            class="icon-btn icon-btn--send"
+            id="sendBtn"
+            type="submit"
+            aria-label="Send message"
+            title="Send"
+            disabled
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"
+              />
+            </svg>
+          </button>
+        </form>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

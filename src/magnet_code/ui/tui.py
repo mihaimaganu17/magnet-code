@@ -478,6 +478,7 @@ class TUI:
             )
 
         elif name == "todos" and success:
+            # TODO: There is no persistent state for todos
             output_display = truncate_text(output, self.config.model_name, self._max_block_tokens)
             blocks.append(
                 Syntax(
