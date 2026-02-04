@@ -155,6 +155,10 @@ class Agent:
                     tool_result.content,
                 )
 
+        # At this point we have have finished the agentic loop without fulfilling the goal and the
+        # max turns have been reached
+        yield AgentEvent.agent_error(f"Maximum turns ({max_turns}) reached")
+
     async def __aenter__(self) -> Agent:
         """Python helper function to open a context handler used by `with` statements"""
         return self

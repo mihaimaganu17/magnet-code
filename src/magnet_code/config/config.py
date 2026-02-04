@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Any
 from pydantic import BaseModel, Field
 
 
@@ -73,3 +74,6 @@ class Config(BaseModel):
             errors.append(f"Working directory does not exist: {self.cwd}")
 
         return errors
+
+    def to_dict(self) -> dict[str, Any]:
+        return self.model_dump(mode='json')
