@@ -425,6 +425,30 @@ class TUI:
                 )
             )
 
+        elif name == 'web_search' and success:
+            results = metadata.get('results')
+            query = args.get("query")
+            summary = []
+            
+            if isinstance(query, str):
+                summary.append(query)
+            
+            if isinstance(results, int):
+                summary.append(f"{results} results")
+                
+            if summary:
+                blocks.append(Text(" 🔵 ".join(summary), style="muted"))
+    
+            output_display = truncate_text(output, self.config.model_name, self._max_block_tokens)
+            blocks.append(
+                Syntax(
+                    output_display,
+                    "text",
+                    theme="vim",
+                    word_wrap=True,
+                )
+            )
+
         if error and not success:
             blocks.append(Text(error, style='error'))
             
