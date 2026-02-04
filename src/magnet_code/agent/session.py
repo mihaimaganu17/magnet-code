@@ -12,7 +12,7 @@ class Session:
     def __init__(self, config: Config):
         self.config = config
         self.client = LLMClient(config)
-        self.tool_registry = create_default_registry(self.config)
+        self.tool_registry = create_default_registry(config)
         self.context_manager = ContextManager(
             config,
             user_memory=self._load_memory(),

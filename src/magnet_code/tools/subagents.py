@@ -60,7 +60,7 @@ class SubAgentTool(Tool):
 
         subagent_config = Config(**config_dict)
 
-        prompt = f"""You are a specialized sub-agent with a specific task to complete
+        prompt = f"""You are a specialized sub-agent with a specific task to complete.
         
         {self.definition.goal_prompt}
         
@@ -70,6 +70,7 @@ class SubAgentTool(Tool):
         IMPORTANT:
         - Focus only on completing the specified task
         - Do not engage in unrelated actions
+        - Use the given tools whenever you need them
         - Be factual and do not 
         - Once you have completed the task or have the answer, provide you final response
         - Do not try to cheat or make things up that are not factual in order to complete the task.
@@ -80,6 +81,7 @@ class SubAgentTool(Tool):
         error = None
         # By default we assume the subagent terminated because it achieved the desired goal
         terminate_response = "goal"
+
 
         try:
             async with Agent(subagent_config) as agent:

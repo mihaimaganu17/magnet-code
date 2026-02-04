@@ -93,12 +93,12 @@ def _get_tool_guidelines_section(tools: list[Tool]) -> str:
     
     if subagent_tools:
         guidelines += """
-6. **Sub-Agents**:
-   - Use sub-agents for complex codebase exploration, code review, or specialized multi-step tasks
-   - Sub-agents run with isolated context and have limited tool access
-   - Provide clear, specific goals when invoking sub-agents
+6. **SubAgents**:
+   - Use subagents for complex codebase exploration, code review, or specialized multi-step tasks
+   - Subagents run with isolated context and have limited tool access, but they do have tools
+   - Provide clear, specific goals when invoking subagents
    - For simple queries (like finding a specific function), use direct tools (`grep`, `read_file`) instead
-   - Use sub-agents when the task involves complex refactoring, codebase exploration, or system-wide analysis"""
+   - Use subagents when the task involves complex refactoring, codebase exploration, or system-wide analysis"""
 
     return guidelines
 

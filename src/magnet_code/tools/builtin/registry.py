@@ -40,7 +40,7 @@ class ToolRegistry:
         # Filter allowed tools
         if self.config.allowed_tools:
             allowed_set = set(self.config.allowed_tools)
-            tools = list(set(tools).intersection(allowed_set))
+            tools = [t for t in tools if t.name in allowed_set]
 
         return tools
     
