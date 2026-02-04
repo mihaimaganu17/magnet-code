@@ -10,6 +10,9 @@ def get_system_prompt(config: Config, user_memory: str | None = None) -> str:
     # Identity and role
     parts.append(_get_identity_section())
 
+    # Environment section
+    parts.append(_get_environment_section(config))
+
     # AGENTS.md spec
     parts.append(_get_agents_md_section())
 
@@ -31,6 +34,35 @@ def get_system_prompt(config: Config, user_memory: str | None = None) -> str:
     parts.append(_get_operational_section())
 
     return "\n\n".join(parts)
+
+
+def _get_environment_section(config: Config) -> str:
+    """Generate the environment section."""
+    now = datetime.now()
+    os_info = f"{platform.system()} {platform.release()}"
+    
+    return f"""# Environment
+
+- **Current Date**: {now.strftime("%A, %B %d, %Y")}
+- **Operating System**: {os_info}
+- **Working Directory**: {config.cwd}
+- **Shell**: {_get_shell_info()}
+
+The user has granted you access to run tools in service of their request. Use them
+"""
+
+
+def _get_shell_info() -> str:
+    """Get shell information based on platform."""
+    import os
+    import sys
+    
+    if sys.platform == "darwin":
+        return os.environ.get("SHELL", "/bin/sh")
+    elif sys.platform == "win32":
+        return "PowerShell/cmd.exe"
+    else:
+        return os.environ.get("SHELL", "/bin/bash")
 
 
 def _get_developer_instructions_section(instructions: str) -> str:
