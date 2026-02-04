@@ -105,6 +105,8 @@ class TUI:
             "list_dir": ["path", "include_hidden"],
             "grep": ["path", "case_insensitive", "pattern"],
             "glob": ["path", "pattern"],
+            "todos": ["todo_id", "action", "content"],
+            "memory": ["action", "key", "value"],
         }
 
         preferred = _PREFERRED_ORDER.get(tool_name, [])
