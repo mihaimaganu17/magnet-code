@@ -2,9 +2,10 @@ from datetime import datetime
 import platform
 
 from magnet_code.config.config import Config
+from magnet_code.tools.base import Tool
 
 
-def get_system_prompt(config: Config, user_memory: str | None = None) -> str:
+def get_system_prompt(config: Config, user_memory: str | None = None, tools: list[Tool] | None = None) -> str:
     parts = []
 
     # Identity and role
