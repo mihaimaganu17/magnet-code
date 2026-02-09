@@ -7,6 +7,7 @@ from magnet_code.config.loader import get_data_dir
 from magnet_code.context.manager import ContextManager
 from magnet_code.tools.builtin.registry import create_default_registry
 from magnet_code.tools.discovery import ToolDiscoveryManager
+from magnet_code.tools.mcp.manager import MCPManager
 
 
 class Session:
@@ -14,20 +15,30 @@ class Session:
         self.config = config
         self.client = LLMClient(config)
         self.tool_registry = create_default_registry(config)
-        self.context_manager = ContextManager(
-            config,
-            user_memory=self._load_memory(),
-            tools=self.tool_registry.get_tools(),
-        )
+        self.context_manager: ContextManager | None = None
+
         self.discovery_manager = ToolDiscoveryManager(config, self.tool_registry)
+        self.mcp_manager = MCPManager(self.config)
         self.session_id = str(uuid.uuid4())
         self.created_at = datetime.datetime.now()
         self.updated_at = datetime.datetime.now()
-        
-        self.discovery_manager.discover_all()
+
 
         # How many turns have been taking place in the session
         self._turn_count = 0
+
+    
+    async def initialize(self) -> None:
+        self.mcp_manager.initialize()
+        self.mcp_manager.register_tools(self.tool_registry)
+        self.discovery_manager.discover_all()
+
+        self.context_manager =  ContextManager(
+            config=self.config,
+            user_memory=self._load_memory(),
+            tools=self.tool_registry.get_tools(),
+        )
+ 
 
     def _load_memory(self) -> str | None:
         data_dir = get_data_dir()

@@ -161,6 +161,7 @@ class Agent:
 
     async def __aenter__(self) -> Agent:
         """Python helper function to open a context handler used by `with` statements"""
+        await self.session.initialize()
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback) -> None:
