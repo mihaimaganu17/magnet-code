@@ -30,7 +30,7 @@ class MCPManager:
                 cwd=self.config.cwd,
             )
             
-        connection_tasks = [await asyncio.wait_for(client.connect(), timeout=client.config.startup_timeout_sec) for _name, client in self._clients.items()]
+        connection_tasks = [asyncio.wait_for(client.connect(), timeout=client.config.startup_timeout_sec) for _name, client in self._clients.items()]
 
         await asyncio.gather(*connection_tasks, return_exceptions=True)
         
@@ -52,7 +52,7 @@ class MCPManager:
                    config=self.config,
                    name=f"{client.name}__{tool_info.name}",
                 )
-                registry.register_mcp_tool()
+                registry.register_mcp_tool(mcp_tool)
                 count += 1
         
         return count

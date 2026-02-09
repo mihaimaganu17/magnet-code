@@ -1,3 +1,4 @@
+from typing import Any
 from magnet_code.config.config import Config
 from magnet_code.tools.base import Tool, ToolInvocation, ToolKind, ToolResult
 from magnet_code.tools.mcp.client import MCPClient, MCPToolInfo
@@ -14,12 +15,14 @@ class MCPTool(Tool):
         self.name = name
         self.description = self._tool_info.description
         
+    @property
+    def schema(self) -> dict[str, Any]:
         input_schema = self._tool_info.input_schema or {}
         self.schema = {
             "type": "object",
             "properties": input_schema.get("properties", {}),
             "required": input_schema.get("required", []),
-        }
+        }    
 
     def is_mutating(self, params) -> bool:
         return True
