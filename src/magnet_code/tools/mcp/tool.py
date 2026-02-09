@@ -18,7 +18,7 @@ class MCPTool(Tool):
     @property
     def schema(self) -> dict[str, Any]:
         input_schema = self._tool_info.input_schema or {}
-        self.schema = {
+        return {
             "type": "object",
             "properties": input_schema.get("properties", {}),
             "required": input_schema.get("required", []),
