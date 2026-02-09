@@ -1,4 +1,5 @@
 from __future__ import annotations
+import fnmatch
 import os
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,24 @@ class ShellEnvironmentPolicy(BaseModel):
     )
     # Overriding variables
     set_vars: dict[str, str] = Field(default_factory=dict)
+
+    def _build_environment(self) -> dict[str, str]:
+        env = os.environ.copy()
+
+        if not self.ignore_default_excludes:
+            for pattern in self.exclude_patterns:
+                # Match and compile a list of all the environment variables against the pattern
+                keys_to_remove = [
+                    k for k in env.keys() if fnmatch.fnmatch(k.upper(), pattern.upper())
+                ]
+                for k in keys_to_remove:
+                    del env[k]
+
+        # Check if we need to update any override keys
+        if self.set_vars:
+            env.update(self.set_vars)
+
+        return env
 
 
 class MCPServerConfig(BaseModel):
@@ -107,3 +126,4 @@ class Config(BaseModel):
 
     def to_dict(self) -> dict[str, Any]:
         return self.model_dump(mode='json')
+ 

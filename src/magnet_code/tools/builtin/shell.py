@@ -67,7 +67,7 @@ class ShellTool(Tool):
         if not cwd.exists():
             return ToolResult.error_result(f"Working directory doesn't exist: {cwd}")
 
-        env = self._build_environment()
+        env = self.config.shell_environment._build_environment()
 
         if sys.platform == "win32":
             shell_cmd = ["cmd.exe", "/c", params.command]
@@ -133,24 +133,3 @@ class ShellTool(Tool):
             exit_code=exit_code,
             output=output,
         )
-            
-
-    def _build_environment(self) -> dict[str, str]:
-        env = os.environ.copy()
-
-        shell_environment = self.config.shell_environment
-
-        if not shell_environment.ignore_default_excludes:
-            for pattern in shell_environment.exclude_patterns:
-                # Match and compile a list of all the environment variables against the pattern
-                keys_to_remove = [
-                    k for k in env.keys() if fnmatch.fnmatch(k.upper(), pattern.upper())
-                ]
-                for k in keys_to_remove:
-                    del env[k]
-
-        # Check if we need to update any override keys
-        if shell_environment.set_vars:
-            env.update(shell_environment.set_vars)
-
-        return env
