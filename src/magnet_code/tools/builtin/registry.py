@@ -21,9 +21,9 @@ class ToolRegistry:
         self._tools[tool.name] = tool
         logger.debug(f"Registered tool: {tool.name}")
 
-    def register_mcp_tool(self, name: str, tool: Tool) -> None:
+    def register_mcp_tool(self, tool: Tool) -> None:
         self._mcp_tools[tool.name] = tool 
-        logger.debug(f"Registered MCP tool: {name}")
+        logger.debug(f"Registered MCP tool: {tool.name}")
         
     def unregister(self, name: str) -> bool:
         if name in self._tools:

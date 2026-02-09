@@ -1,6 +1,8 @@
 import asyncio
 from magnet_code.config.config import Config
-from magnet_code.tools.mcp.client import MCPClient
+from magnet_code.tools.builtin.registry import ToolRegistry
+from magnet_code.tools.mcp.client import MCPClient, MCPServerStatus
+from magnet_code.tools.mcp.tool import MCPTool
 
 
 class MCPManager:
@@ -28,8 +30,29 @@ class MCPManager:
                 cwd=self.config.cwd,
             )
             
-        connection_tasks = [await asyncio.wait_for(client.connect()) for name, client in self._clients.items()]
+        connection_tasks = [await asyncio.wait_for(client.connect()) for _name, client in self._clients.items()]
 
         await asyncio.gather(*connection_tasks, return_exceptions=True)
         
         self._initialized = True
+
+
+    def register_tools(self, registry: ToolRegistry) -> int:
+        count = 0
+        
+        for client in self._clients.values():
+            # Only register tools from a connected MCP server
+            if client.status != MCPServerStatus.CONNECTED:
+                continue
+            
+            for tool_info in client.tools:
+                mcp_tool = MCPTool(
+                   tool_info=tool_info,
+                   client=client,
+                   config=self.config,
+                   name=f"{client.name}__{tool_info.name}",
+                )
+                registry.register_mcp_tool()
+                count += 1
+        
+        return count
