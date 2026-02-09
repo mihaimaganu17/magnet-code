@@ -31,7 +31,7 @@ class MCPTool(Tool):
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         try:
-            result = await self._client.call_tool(self._tool_name.name, invocation.parameters)
+            result = await self._client.call_tool(self._tool_info.name, invocation.parameters)
             output = result.get("output", "")
             is_error = result.get("is_error", False)
 
@@ -39,5 +39,5 @@ class MCPTool(Tool):
                 return ToolResult.error_result(output)
 
             return ToolResult.success_result(output)
-        except Exception:
+        except Exception as e:
             return ToolResult.error_result(f"MCP tool failed: {e}")

@@ -33,7 +33,7 @@ class ToolRegistry:
         return False
     
     def get(self, name: str) -> Tool | None:
-       if name in self._tools.get(name):
+       if name in self._tools:
            return self._tools[name]
        elif name in self._mcp_tools:
            return self._mcp_tools[name]
