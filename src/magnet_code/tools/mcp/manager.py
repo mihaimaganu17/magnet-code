@@ -30,7 +30,7 @@ class MCPManager:
                 cwd=self.config.cwd,
             )
             
-        connection_tasks = [await asyncio.wait_for(client.connect()) for _name, client in self._clients.items()]
+        connection_tasks = [await asyncio.wait_for(client.connect(), timeout=client.config.startup_timeout_sec) for _name, client in self._clients.items()]
 
         await asyncio.gather(*connection_tasks, return_exceptions=True)
         

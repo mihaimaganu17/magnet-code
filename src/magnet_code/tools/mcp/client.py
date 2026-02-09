@@ -40,8 +40,7 @@ class MCPClient:
     def _create_transport(self) -> StdioTransport | SSETransport:
         if self.config.command:
             env = ShellEnvironmentPolicy(ignore_default_excludes=True)._build_environment()
-            env.udpate(self.config.env)
-            print(env)
+            env.update(self.config.env)
             
             return StdioTransport(
                 command=self.config.command,

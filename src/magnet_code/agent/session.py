@@ -29,7 +29,7 @@ class Session:
 
     
     async def initialize(self) -> None:
-        self.mcp_manager.initialize()
+        await self.mcp_manager.initialize()
         self.mcp_manager.register_tools(self.tool_registry)
         self.discovery_manager.discover_all()
 

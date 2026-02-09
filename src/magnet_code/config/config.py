@@ -66,6 +66,8 @@ class MCPServerConfig(BaseModel):
                 "MCP Server cannot have both 'command' (stdio) and 'url' (http/sse)"
             )
 
+        return self
+
 
 class Config(BaseModel):
     model: ModelConfig = Field(default_factory=ModelConfig)
