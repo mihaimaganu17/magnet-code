@@ -6,6 +6,7 @@ from magnet_code.agent.session import Session
 from magnet_code.client.response import (
     StreamEventType,
     StreamEventType,
+    TokenUsage,
     ToolCall,
     ToolResultMessage,
 )
@@ -57,13 +58,19 @@ class Agent:
             response_text = ""
 
             # Check for context overflow
-            
+            if self.session.context_manager.needs_compression():
+                summary, usage = await self.session.chat_compactor.compress(self.session.context_manager)
+              
+            if summary:
+                self.session.context_manager.set_latest_usage(usage)  
+                self.session.context_manager.add_usage(usage)  
 
             # Get OpenAI API compatible schema of all the tools in the registry, such that we can add
             # them to the LLM request and the LLM knows which tools are available for calling
             tool_schemas = self.session.tool_registry.get_schemas()
             # Keep track of the list of tool calls the LLM sends back as response
             tool_calls: list[ToolCall] = []
+            usage: TokenUsage | None = None
 
             # Issue a chat completion request to the LLM client and handle the yielded events
             async for event in self.session.client.chat_completion(
@@ -87,6 +94,8 @@ class Agent:
                 # If it is an error report an agent error event as well.
                 elif event.type == StreamEventType.ERROR:
                     yield AgentEvent.agent_error(event.error or "Unknown error occurred.")
+                elif event.type == StreamEventType.MESSAGE_COPLETE:
+                    usage = event.usage
 
             # Add the response as an asssitant message
             self.session.context_manager.add_assistant_message(
@@ -113,6 +122,9 @@ class Agent:
                 yield AgentEvent.text_complete(response_text)
 
             if not tool_calls:
+                if usage:
+                    self.session.context_manager.set_latest_usage(usage)
+                    self.session.context_manager.add_usage(usage)
                 return
             
             # Keeping track of the results of the tools associated with their ID, such that we can
@@ -157,6 +169,10 @@ class Agent:
                     tool_result.tool_call_id,
                     tool_result.content,
                 )
+
+            if usage:
+                self.session.context_manager.set_latest_usage(usage)
+                self.session.context_manager.add_usage(usage)
 
         # At this point we have have finished the agentic loop without fulfilling the goal and the
         # max turns have been reached

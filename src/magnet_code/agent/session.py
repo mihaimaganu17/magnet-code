@@ -4,6 +4,7 @@ import uuid
 from magnet_code.client.llm_client import LLMClient
 from magnet_code.config.config import Config
 from magnet_code.config.loader import get_data_dir
+from magnet_code.context.compaction import ChatCompactor
 from magnet_code.context.manager import ContextManager
 from magnet_code.tools.builtin.registry import create_default_registry
 from magnet_code.tools.discovery import ToolDiscoveryManager
@@ -19,6 +20,7 @@ class Session:
 
         self.discovery_manager = ToolDiscoveryManager(config, self.tool_registry)
         self.mcp_manager = MCPManager(self.config)
+        self.chat_compactor = ChatCompactor(self.client)
         self.session_id = str(uuid.uuid4())
         self.created_at = datetime.datetime.now()
         self.updated_at = datetime.datetime.now()

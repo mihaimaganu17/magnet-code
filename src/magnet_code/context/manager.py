@@ -1,4 +1,5 @@
 from typing import Any
+from magnet_code.client.response import TokenUsage
 from magnet_code.config.config import Config
 from magnet_code.prompts.system import get_system_prompt
 from dataclasses import dataclass, field
@@ -36,6 +37,8 @@ class ContextManager:
         self._model_name = config.model_name
         self._system_prompt = get_system_prompt(self.config, user_memory, tools)
         self._messages: list[MessageItem] = []
+        self._latest_usage = TokenUsage()
+        self._total_usage = TokenUsage()
 
     def add_user_message(self, content: str) -> None:
         item = MessageItem(
@@ -79,3 +82,17 @@ class ContextManager:
             messages.append(item.to_dict())
             
         return messages
+
+    def needs_compression(self) -> bool:
+        context_limit = self.config.model.context_window
+        current_token = self._latest_usage.total_tokens
+        
+        return current_token > (context_limit * 0.8)
+
+
+    def set_latest_usage(self, usage: TokenUsage):
+        self._latest_usage = usage
+
+
+    def add_usage(self, usage: TokenUsage):
+        self._total_usage += usage
