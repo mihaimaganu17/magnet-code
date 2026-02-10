@@ -56,6 +56,9 @@ class Agent:
             # Initial variable where we accumulate the response from the LLM
             response_text = ""
 
+            # Check for context overflow
+            
+
             # Get OpenAI API compatible schema of all the tools in the registry, such that we can add
             # them to the LLM request and the LLM knows which tools are available for calling
             tool_schemas = self.session.tool_registry.get_schemas()
