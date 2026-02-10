@@ -32,6 +32,11 @@ class MessageItem:
 
 
 class ContextManager:
+    # Keep the last 40_000 tokens of the most recent tool outputs
+    PRUNE_PROTECT_TOKENS = 40_000
+    # If we can free at least this amount of tokens, we prune
+    PRUNE_MINIMUM_TOKENS = 20_000
+    
     def __init__(self, config: Config, user_memory: str | None, tools: list[Tool] | None) -> None:
         self.config = config
         self._model_name = config.model_name
@@ -153,3 +158,41 @@ I'll continue with the REMAINING tasks only, starting from where we left off."""
             token_count=count_tokens(continue_content, self._model_name),
         )
         self._messages.append(continue_item)
+
+    def prune_tool_outputs(self) -> int:
+        """Prune the tool outputs and return the number of tokens pruned"""
+
+        # Count the number of user messages
+        user_message_count = sum(1 for msg in self._messages if msg.rol == "user")
+        
+        if user_message_count < 2:
+            return 0
+        
+        # Number of total tokens
+        total_tokens = 0
+        # Number of tokens we are pruning
+        pruned_tokens = 0
+        to_prune: list[MessageItem] = []
+        # From the latest tool messages up to the initial
+        for msg in reversed(self._messages):
+            # Tool results are more expensive token wise than tool calls and we want to prune those
+            if msg.role == 'tool' and msg.tool_call_id:
+                tokens = msg.token_count or count_tokens(msg.content, self._model_name)
+                total_tokens += tokens
+                
+                if total_tokens > self.PRUNE_PROTECT_TOKENS:
+                    pruned_tokens += tokens
+                    to_prune.append(msg)
+                    
+        if pruned_tokens < self.PRUNE_MINIMUM_TOKENS:
+            return 0
+        
+        # number of messages we pruned
+        pruned_count = 0
+
+        for msg in to_prune:
+            msg.content = '[Old tool result content cleared]'
+            msg.token_count = count_tokens(msg.content, self._model_name)
+            pruned_count += 1
+        
+        return pruned_count
