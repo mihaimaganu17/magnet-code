@@ -156,6 +156,7 @@ class LLMClient:
         async for chunk in response:
             # The usage attribute is only present in the last chunks, so we have to check for it
             if hasattr(chunk, "usage") and chunk.usage:
+                print(chunk.usage)
                 # Gather the usage
                 usage = TokenUsage(
                     prompt_tokens=chunk.usage.prompt_tokens,

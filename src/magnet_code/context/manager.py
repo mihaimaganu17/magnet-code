@@ -85,9 +85,12 @@ class ContextManager:
 
     def needs_compression(self) -> bool:
         context_limit = self.config.model.context_window
-        current_token = self._latest_usage.total_tokens
+        current_token = self._latest_usage.total_tokens[0]
+
+        print(context_limit)
+        print(current_token)
         
-        return current_token > (context_limit * 0.8)
+        return current_token > context_limit * 0.8
 
 
     def set_latest_usage(self, usage: TokenUsage):

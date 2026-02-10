@@ -56,6 +56,7 @@ class Agent:
             self.session.increment_turn()
             # Initial variable where we accumulate the response from the LLM
             response_text = ""
+            summary = None
 
             # Check for context overflow
             if self.session.context_manager.needs_compression():

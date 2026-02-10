@@ -150,7 +150,7 @@ class Tool(abc.ABC):
                     # Get locations for this validation error
                     field = ".".join(str(x) for x in error.get("loc", []))
                     msg = error.get("msg", "Validation error")
-                    error.append(f"Parameter '{field}': {msg}")
+                    errors.append(f"Parameter '{field}': {msg}")
 
                 return errors
             except Exception as e:

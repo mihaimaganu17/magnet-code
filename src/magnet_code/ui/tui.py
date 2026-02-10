@@ -237,6 +237,7 @@ class TUI:
             ".c": "c",
             ".h": "c",
             ".html": "html",
+            ".css": "css",
         }[suffix]
 
     def print_welcome(self, title: str, lines: list[str]) -> None:
