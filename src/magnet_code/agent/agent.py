@@ -169,3 +169,6 @@ class Agent:
         if self.session and self.session.client:
             await self.session.client.close()
             self.session = None
+
+        if self.session and self.session.mcp_manager:
+            await self.session.mcp_manager.shutdown()
