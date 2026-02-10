@@ -156,13 +156,20 @@ class LLMClient:
         async for chunk in response:
             # The usage attribute is only present in the last chunks, so we have to check for it
             if hasattr(chunk, "usage") and chunk.usage:
-                print(chunk.usage)
                 # Gather the usage
                 usage = TokenUsage(
                     prompt_tokens=chunk.usage.prompt_tokens,
                     completion_tokens=chunk.usage.completion_tokens,
                     total_tokens=chunk.usage.total_tokens,
                     cached_tokens=chunk.usage.prompt_tokens_details.cached_tokens,
+                )
+            else:
+                # Generating fake content to use as usage
+                usage = TokenUsage(
+                    prompt_tokens=100,
+                    completion_tokens=500,
+                    total_tokens=700,
+                    cached_tokens=2000,
                 )
             # Check if this chunk has any response choices. If not, go to the next chunk
             if not chunk.choices:

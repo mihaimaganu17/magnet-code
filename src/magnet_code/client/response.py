@@ -27,14 +27,16 @@ class StreamEventType(str, Enum):
 @dataclass
 class TokenUsage:
     # How many prompts we are using in the text message request
-    prompt_tokens: int = 0,
+    prompt_tokens: int = 0
     # Number of token the assistant used to generate the response
-    completion_tokens: int = 0,
+    completion_tokens: int = 0
     # Total tokens of the prompt and the completion
-    total_tokens: int = 0,
-    cached_tokens: int = 0,
+    total_tokens: int = 0
+    cached_tokens: int = 0
 
     def __add__(self, other: TokenUsage):
+        print(self)
+        print(other)
         return TokenUsage(
             prompt_tokens = self.prompt_tokens + other.prompt_tokens,
             completion_tokens = self.completion_tokens + other.completion_tokens,
