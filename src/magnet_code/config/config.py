@@ -1,4 +1,5 @@
 from __future__ import annotations
+from enum import Enum
 import fnmatch
 import os
 from pathlib import Path
@@ -43,7 +44,7 @@ class MCPServerConfig(BaseModel):
     enabled: bool = True
     # How much time should we wait for this MCP to load
     startup_timeout_sec: float = 10
-    
+
     # stdio transport
     command: str | None = None
     args: list[str] = Field(default_factory=list)
@@ -53,13 +54,15 @@ class MCPServerConfig(BaseModel):
     # http/sse transport
     url: str | None = None
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_transport(self) -> MCPServerConfig:
         has_command = self.command is not None
         has_url = self.url is not None
 
         if not has_command and not has_url:
-            raise ValueError("MCP Server must have either 'command' (stdio) or 'url' (http/sse)")
+            raise ValueError(
+                "MCP Server must have either 'command' (stdio) or 'url' (http/sse)"
+            )
 
         if has_command and has_url:
             raise ValueError(
@@ -69,12 +72,22 @@ class MCPServerConfig(BaseModel):
         return self
 
 
+class ApprovalPolicy(str, Enum):
+    ON_REQUEST = "on-request"
+    ON_FAILURE = "on-failure"
+    AUTO = "auto"
+    AUTO_EDIT = "auto-edit"
+    NEVER = "never"
+    YOLO = "yolo"
+
+
 class Config(BaseModel):
     model: ModelConfig = Field(default_factory=ModelConfig)
     cwd: Path = Field(default_factory=Path.cwd)
     shell_environment: ShellEnvironmentPolicy = Field(
         default_factory=ShellEnvironmentPolicy
     )
+    approval: ApprovalPolicy = ApprovalPolicy.ON_REQUEST
     max_turns: int = 100
     mcp_servers: dict[str, MCPServerConfig] = Field(default_factory=dict)
 
@@ -127,5 +140,4 @@ class Config(BaseModel):
         return errors
 
     def to_dict(self) -> dict[str, Any]:
-        return self.model_dump(mode='json')
- 
+        return self.model_dump(mode="json")
