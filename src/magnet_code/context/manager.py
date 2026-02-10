@@ -39,8 +39,6 @@ class ContextManager:
         self._messages: list[MessageItem] = []
         self._latest_usage = TokenUsage()
         self._total_usage = TokenUsage()
-        print(self._latest_usage)
-        print(self._total_usage)
 
     def add_user_message(self, content: str) -> None:
         item = MessageItem(
@@ -91,13 +89,11 @@ class ContextManager:
 
         print(context_limit)
         print(current_token)
-        
         return current_token > context_limit * 0.8
 
 
     def set_latest_usage(self, usage: TokenUsage):
         self._latest_usage = usage
-
 
     def add_usage(self, usage: TokenUsage):
         self._total_usage += usage
