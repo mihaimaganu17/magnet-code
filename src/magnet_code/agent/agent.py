@@ -127,6 +127,8 @@ class Agent:
                 if usage:
                     self.session.context_manager.set_latest_usage(usage)
                     self.session.context_manager.add_usage(usage)
+
+                pruned_counts = self.session.context_manager.prune_tool_outputs()
                 return
             
             # Keeping track of the results of the tools associated with their ID, such that we can
@@ -175,6 +177,8 @@ class Agent:
             if usage:
                 self.session.context_manager.set_latest_usage(usage)
                 self.session.context_manager.add_usage(usage)
+
+            pruned_counts = self.session.context_manager.prune_tool_outputs()
 
         # At this point we have have finished the agentic loop without fulfilling the goal and the
         # max turns have been reached

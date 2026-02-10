@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 from magnet_code.client.response import TokenUsage
 from magnet_code.config.config import Config
@@ -16,6 +17,7 @@ class MessageItem:
     # Why do we have a single tool call if there are many tool calls?
     tool_call_id: str | None = None
     tool_calls: list[dict[str, Any]] = field(default_factory=list)
+    pruned_at: datetime | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Converts `self` to a dict compatible with OpenAI API spec for messages"""
@@ -177,6 +179,9 @@ I'll continue with the REMAINING tasks only, starting from where we left off."""
         for msg in reversed(self._messages):
             # Tool results are more expensive token wise than tool calls and we want to prune those
             if msg.role == 'tool' and msg.tool_call_id:
+                # We already hit the last message that was pruned
+                if msg.pruned_at:
+                    break
                 tokens = msg.token_count or count_tokens(msg.content, self._model_name)
                 total_tokens += tokens
                 
@@ -193,6 +198,7 @@ I'll continue with the REMAINING tasks only, starting from where we left off."""
         for msg in to_prune:
             msg.content = '[Old tool result content cleared]'
             msg.token_count = count_tokens(msg.content, self._model_name)
+            msg.pruned_at = datetime.now()
             pruned_count += 1
         
         return pruned_count
