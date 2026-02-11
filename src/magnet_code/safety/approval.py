@@ -18,6 +18,7 @@ class ApprovalContext:
     tool_name: str
     param: dict[str, Any]
     is_mutating: bool
+    # List of paths that are touched by an llm action and need to be approved
     affected_paths: list[Path]
     command: str | None = None
     is_dangerous: bool = False
@@ -133,4 +134,21 @@ class ApprovalManager:
             return ApprovalDecision.APPROVED
         
         if context.command:
-            decisison = self._assess_command_safety(context.command)
+            decision = self._assess_command_safety(context.command)
+            if decision != ApprovalDecision.NEEDS_CONFIRMATION:
+                return decision
+            
+        for path in context.affected_paths:
+            path_decision = ApprovalDecision.NEEDS_CONFIRMATION
+            # If the path is relative to the current one, we already have confirmation
+            if path.is_relative_to(self.cwd):
+                path_decision = ApprovalDecision.APPROVED
+            else:
+                return path_decision
+            
+        if context.is_dangerous:
+            if self.approval_policy == ApprovalPolicy.YOLO:
+                return ApprovalDecision.APPROVED
+            return ApprovalDecision.NEEDS_CONFIRMATION
+
+        return ApprovalDecision.APPROVED
