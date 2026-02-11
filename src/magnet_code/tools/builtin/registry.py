@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Any
 from magnet_code.config.config import Config
-from magnet_code.safety.approval import ApprovalManager
+from magnet_code.safety.approval import ApprovalContext, ApprovalDecision, ApprovalManager
 from magnet_code.tools.base import Tool, ToolInvocation, ToolResult
 from magnet_code.tools.builtin import ReadFileTool, get_all_builtin_tools
 from magnet_code.tools.subagents import SubAgentTool, get_default_subagent_defintions
@@ -98,11 +98,33 @@ class ToolRegistry:
 
         # Wrapper type, easy to use
         invocation = ToolInvocation(parameters=params, cwd=cwd)
+
+        # If we have an approval manager, we run through the steps of confirming the tool execution
         if approval_manager:
-            tool.get_confirmation()
+            confirmation = await tool.get_confirmation()
+            if confirmation:
+                context = ApprovalContext(
+                    tool_name=tool.name,
+                    params=params,
+                    is_mutating=tool.is_mutating(),
+                    affected_paths=confirmation.affected_paths,
+                    command=confirmation.command,
+                    is_dangerous=confirmation.is_dangerous,
+                )
+                
+                decision = await approval_manager.check_approval(context)
+                
+                if decision == ApprovalDecision.REJECTED:
+                    return ToolResult.error_result("Operation rejected by safety policy")
+                
+                elif decision == ApprovalDecision.NEEDS_CONFIRMATION:
+                    approved = await approval_manager.request_confirmation(confirmation)
+                    
+                    if not approved:
+                        return ToolResult.error_result("User rejected the operation")
+                        
         try:
             result = await tool.execute(invocation)
-            return result
         except Exception as e:
             logger.exception(f"Tool {tool.name} raised unexpected error")
             return ToolResult.error_result(
@@ -112,6 +134,7 @@ class ToolRegistry:
                 },
             )
 
+        return result
 
 def create_default_registry(config: Config) -> ToolRegistry:
     """Create a default registry which has all the builtin tools"""

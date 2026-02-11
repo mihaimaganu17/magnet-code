@@ -16,7 +16,7 @@ class ApprovalDecision(str, Enum):
 @dataclass
 class ApprovalContext:
     tool_name: str
-    param: dict[str, Any]
+    params: dict[str, Any]
     is_mutating: bool
     # List of paths that are touched by an llm action and need to be approved
     affected_paths: list[Path]
