@@ -94,7 +94,7 @@ class ApprovalManager:
         approval_policy: ApprovalPolicy,
         cwd: Path,
         confirmation_callback: (
-            Callable[[ToolConfirmation], Awaitable[bool]] | None
+            Callable[[ToolConfirmation], bool] | None
         ) = None,
     ):
         self.approval_policy = approval_policy

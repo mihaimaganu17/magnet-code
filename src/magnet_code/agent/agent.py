@@ -19,7 +19,7 @@ class Agent:
         self,
         config=Config,
         confirmation_callback: (
-            Callable[[ToolConfirmation], Awaitable[bool]] | None
+            Callable[[ToolConfirmation], bool] | None
         ) = None,
     ):
         self.config = config
