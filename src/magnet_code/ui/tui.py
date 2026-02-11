@@ -10,7 +10,7 @@ from rich import box
 from rich.syntax import Syntax
 
 from magnet_code.config.config import Config
-from magnet_code.tools.base import FileDiff, ToolResult
+from magnet_code.tools.base import FileDiff, ToolConfirmation, ToolResult
 from magnet_code.utils.paths import resolve_path
 
 import re
@@ -550,3 +550,33 @@ class TUI:
 
         self.console.print()
         self.console.print(panel)
+
+    def handle_confirmation(self, confirmation: ToolConfirmation) -> bool:
+        output = [
+            Text(confirmation.tool_name, style="tool"),
+            Text(confirmation.description, style='code'),
+        ]
+        
+        if confirmation.command:
+            output.append(Text(f'$ {confirmation.command}', style='warning'))
+            
+        if confirmation.diff:
+            diff_text = confirmation.to_diff()
+            output.append(Syntax(
+                diff_text,
+                'diff',
+                theme="monokai",
+                word_wrap=True,
+            ))
+            
+        self.console.print()
+        self.console.print(
+            Panel(
+                Group(*output),
+                title=Text('Approval required', style='warning'),
+                title_align='left',
+                border_style='warning',
+                box=box.ROUNDED,
+                padding=(1,2),
+            )
+        )
