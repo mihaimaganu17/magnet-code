@@ -1,6 +1,13 @@
 from pathlib import Path
 from pydantic import BaseModel, Field
-from magnet_code.tools.base import FileDiff, Tool, ToolInvocation, ToolKind, ToolResult
+from magnet_code.tools.base import (
+    FileDiff,
+    Tool,
+    ToolConfirmation,
+    ToolInvocation,
+    ToolKind,
+    ToolResult,
+)
 from magnet_code.utils.paths import ensure_parent_directory, resolve_path
 
 
@@ -31,6 +38,54 @@ class EditTool(Tool):
     )
     kind = ToolKind.WRITE
     schema = EditParams
+
+    async def get_confirmation(self, invocation) -> ToolConfirmation:
+        params = EditParams(**invocation.parameters)
+        path = resolve_path(invocation.cwd, params.path)
+
+        is_new_file = not path.exists()
+
+        if is_new_file:
+            diff = FileDiff(
+                path=path,
+                old_content="",
+                new_content=params.new_string,
+                is_new_file=is_new_file,
+            )
+
+            return ToolConfirmation(
+                tool_name=self.name,
+                params=invocation.parameters,
+                description=f"Created file: {path}",
+                diff=diff,
+                affected_paths=[path],
+                is_dangerous=True,
+            )
+
+        old_content = path.read_text(encoding="utf-8")
+
+        if params.replace_all:
+            new_content = old_content.replace(params.old_string, params.new_string)
+        else:
+            new_content = old_content.replace(params.old_string, params.new_string, 1)
+
+        diff = (
+            FileDiff(
+                path=path,
+                old_content=old_content,
+                new_content=params.content,
+                is_new_file=is_new_file,
+            ),
+        )
+
+        return ToolConfirmation(
+            tool_name=self.name,
+            params=invocation.parameters,
+            description=f"Edit file: {path}",
+            diff=diff,
+            affected_paths=[path],
+            is_dangerous=True,
+        )
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = EditParams(**invocation.parameters)
@@ -69,10 +124,10 @@ class EditTool(Tool):
             return ToolResult.error_result(
                 "old_string is empty but file exists. Provide old_string to edit, or use write_file tool instead"
             )
-            
+
         occurrence_count = old_content.count(params.old_string)
-        
-        # If the string we are trying to edit is not present in the file, the LLM hallucinates or 
+
+        # If the string we are trying to edit is not present in the file, the LLM hallucinates or
         # does not have the last updated state
         if occurrence_count == 0:
             return self._no_match_error(params.old_string, old_content, path)
@@ -85,36 +140,38 @@ class EditTool(Tool):
                 f"2. Set replace_all=true to replace all occurrences",
                 metadata={
                     "ocurrence_count": occurrence_count,
-                }
+                },
             )
-            
+
         if params.replace_all:
             new_content = old_content.replace(params.old_string, params.new_string)
             replace_count = occurrence_count
         else:
             new_content = old_content.replace(params.old_string, params.new_string, 1)
             replace_count = 1
-            
+
         # TODO: Should we do this above by comparing new_string and old_string before replacing?
         if new_content == old_content:
-            return ToolResult.error_result("No change made - old_string equals new_string")
-        
+            return ToolResult.error_result(
+                "No change made - old_string equals new_string"
+            )
+
         try:
             path.write_text(new_content, encoding="utf-8")
         except IOError as e:
             return ToolResult.error_result(f"Failed to write file: {e}")
-        
+
         # Keeps track of how many lines were added / removed
         old_lines = len(old_content.splitlines())
         new_lines = len(new_content.splitlines())
         line_diff = new_lines - old_lines
         diff_msg = ""
-        
+
         if line_diff > 0:
             diff_msg = f" (+{line_diff} lines)"
         elif line_diff < 0:
             diff_msg = f" ({line_diff} lines)"
-        
+
         return ToolResult.success_result(
             f"Edited {path}: replaced: {replace_count} occurrence(s){diff_msg}",
             diff=FileDiff(
@@ -126,18 +183,17 @@ class EditTool(Tool):
                 "path": str(path),
                 "replaced_count": replace_count,
                 "line_diff": line_diff,
-            }
+            },
         )
-        
-    
-    def _no_match_error(self, old_string:str, content: str, path: Path) -> ToolResult:
+
+    def _no_match_error(self, old_string: str, content: str, path: Path) -> ToolResult:
         lines = content.splitlines()
-        
+
         # We want to be able to search for potential partial matches in order to give the LLM a clue
         # about what it could be searching for
         partial_matches = []
         search_terms = old_string.split()[:5]
-        
+
         if search_terms:
             first_term = search_terms[0]
             for i, line in enumerate(lines, 1):
@@ -147,17 +203,15 @@ class EditTool(Tool):
                     partial_matches.append((i, line.strip()[:80]))
                     if len(partial_matches) >= 3:
                         break
-                    
+
         error_msg = f"old_string not found in {path}."
-        
+
         if partial_matches:
             # Report possible matching lines in the error message
             error_msg += "\n\nPossible similar lines:"
             for line_num, line_preview in partial_matches:
                 error_msg += f"\n Line {line_num}: {line_preview}"
-            error_msg += (
-                "\n\nMake sure old_string matches exactly (including whitespace and indentation)."
-            )
+            error_msg += "\n\nMake sure old_string matches exactly (including whitespace and indentation)."
         else:
             error_msg += (
                 " Make sure the text matches exactly, including:\n"
@@ -166,5 +220,5 @@ class EditTool(Tool):
                 "- Any invisible characters"
                 "- Try re-reading the file using read_file tool and then editing."
             )
-            
+
         return ToolResult.error_result(error_msg)
