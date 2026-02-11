@@ -562,7 +562,7 @@ class TUI:
             output.append(Text(f'$ {confirmation.command}', style='warning'))
             
         if confirmation.diff:
-            diff_text = confirmation.to_diff()
+            diff_text = confirmation.diff.to_diff()
             output.append(Syntax(
                 diff_text,
                 'diff',
