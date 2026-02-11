@@ -3,9 +3,11 @@ import os
 from pathlib import Path
 import signal
 import sys
-from magnet_code.tools.base import Tool, ToolInvocation, ToolKind, ToolResult
+from magnet_code.tools.base import Tool, ToolConfirmation, ToolInvocation, ToolKind, ToolResult
 from pydantic import BaseModel, Field
 import fnmatch
+
+from magnet_code.utils.paths import resolve_path
 
 BLOCKED_COMMANDS = {
     "rm -rf /",
@@ -41,6 +43,29 @@ class ShellTool(Tool):
     kind = ToolKind.SHELL
     description = "Execute a shell command. Use this for running system commands, scripts and CLI tools."
     schema = ShellParams
+
+    async def get_confirmation(self, invocation) -> ToolConfirmation:
+        params = ShellParams(**invocation.parameters)
+
+        command = params.command.lower().strip()
+        
+        for blocked in BLOCKED_COMMANDS:
+            if blocked in command:
+                return ToolConfirmation(
+                    tool_name = self.name,
+                    params = invocation.parameters,
+                    description=f"Execute (BLOCKED): {command}",
+                    command=params.command,
+                    is_dangerous=True,
+                )
+
+        return ToolConfirmation(
+            tool_name = self.name,
+            params = invocation.parameters,
+            description=f"Execut: {command}",
+            command=params.command,
+            is_dangerous=True,
+        )
 
     async def execute(self, invocation: ToolInvocation) -> ToolResult:
         params = ShellParams(**invocation.parameters)
