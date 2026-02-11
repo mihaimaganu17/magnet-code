@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Awaitable, Callable
 
 from magnet_code.agent.events import AgentEvent, AgentEventType
 from magnet_code.agent.session import Session
@@ -11,14 +11,21 @@ from magnet_code.client.response import (
     ToolResultMessage,
 )
 from magnet_code.config.config import Config
+from magnet_code.tools.base import ToolConfirmation
 
 
 class Agent:
-    def __init__(self, config=Config):
+    def __init__(
+        self,
+        config=Config,
+        confirmation_callback: (
+            Callable[[ToolConfirmation], Awaitable[bool]] | None
+        ) = None,
+    ):
         self.config = config
         # Create a new LLM client for this agent that will be used to generate responses
         self.session: Session | None = Session(self.config)
-        
+        self.session.approval_manager = confirmation_callback
 
     async def run(self, message: str):
         """Run the agent one time with the given message. The agent yields events for the start of
@@ -50,7 +57,7 @@ class Agent:
         - context management (coming soon)
         """
         max_turns = self.config.max_turns
-        
+
         for turn_num in range(max_turns):
             # Keeping track of turns in the session
             self.session.increment_turn()
@@ -60,12 +67,14 @@ class Agent:
 
             # Check for context overflow
             if self.session.context_manager.needs_compression():
-                summary, usage = await self.session.chat_compactor.compress(self.session.context_manager)
-              
+                summary, usage = await self.session.chat_compactor.compress(
+                    self.session.context_manager
+                )
+
             if summary:
                 self.session.context_manager.replace_with_summary(summary)
-                self.session.context_manager.set_latest_usage(usage)  
-                self.session.context_manager.add_usage(usage)  
+                self.session.context_manager.set_latest_usage(usage)
+                self.session.context_manager.add_usage(usage)
 
             # Get OpenAI API compatible schema of all the tools in the registry, such that we can add
             # them to the LLM request and the LLM knows which tools are available for calling
@@ -95,7 +104,9 @@ class Agent:
                         tool_calls.append(event.tool_call)
                 # If it is an error report an agent error event as well.
                 elif event.type == StreamEventType.ERROR:
-                    yield AgentEvent.agent_error(event.error or "Unknown error occurred.")
+                    yield AgentEvent.agent_error(
+                        event.error or "Unknown error occurred."
+                    )
                 elif event.type == StreamEventType.MESSAGE_COPLETE:
                     usage = event.usage
 
@@ -130,7 +141,7 @@ class Agent:
 
                 pruned_counts = self.session.context_manager.prune_tool_outputs()
                 return
-            
+
             # Keeping track of the results of the tools associated with their ID, such that we can
             # refeed them to the next LLM request through the context manager.
             tool_call_results: list[ToolResultMessage] = []
@@ -148,6 +159,7 @@ class Agent:
                     tool_call.name,
                     tool_call.arguments_delta,
                     self.config.cwd,
+                    self.session.approval_manager,
                 )
 
                 # Issue a completed tool call event
