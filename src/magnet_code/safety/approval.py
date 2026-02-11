@@ -152,3 +152,12 @@ class ApprovalManager:
             return ApprovalDecision.NEEDS_CONFIRMATION
 
         return ApprovalDecision.APPROVED
+
+    async def request_confirmation(self, confirmation: ToolConfirmation) -> bool:
+        if self.confirmation_callback:
+            result = await self.confirmation_callback(confirmation)
+            return result
+        
+        return True
+    
+    
