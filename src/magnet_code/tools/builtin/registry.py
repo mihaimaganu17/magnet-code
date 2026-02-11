@@ -101,7 +101,7 @@ class ToolRegistry:
 
         # If we have an approval manager, we run through the steps of confirming the tool execution
         if approval_manager:
-            confirmation = await tool.get_confirmation()
+            confirmation = await tool.get_confirmation(invocation)
             if confirmation:
                 context = ApprovalContext(
                     tool_name=tool.name,

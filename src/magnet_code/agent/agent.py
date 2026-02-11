@@ -25,7 +25,7 @@ class Agent:
         self.config = config
         # Create a new LLM client for this agent that will be used to generate responses
         self.session: Session | None = Session(self.config)
-        self.session.approval_manager = confirmation_callback
+        self.session.approval_manager.confirmation_callback = confirmation_callback
 
     async def run(self, message: str):
         """Run the agent one time with the given message. The agent yields events for the start of
