@@ -8,6 +8,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich import box
 from rich.syntax import Syntax
+from rich.prompt import Prompt
 
 from magnet_code.config.config import Config
 from magnet_code.tools.base import FileDiff, ToolConfirmation, ToolResult
@@ -580,3 +581,11 @@ class TUI:
                 padding=(1,2),
             )
         )
+        
+        response = Prompt.ask(
+            '\nApprove?',
+            choices=['y', 'n', 'yes', 'no'],
+            default='n'
+        )
+
+        return response.lower() in {'y', 'yes'}
