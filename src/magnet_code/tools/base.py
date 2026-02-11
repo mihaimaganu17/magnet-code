@@ -30,6 +30,7 @@ class ToolInvocation:
 
 
 @dataclass
+# TODO: Fix this error   File "/Users/ace/magic/1_projects/magnet-code/src/magnet_code/ui/tui.py", line 565, in handle_confirmation \n diff_text = confirmation.diff.create_diff() \nAttributeError: 'tuple' object has no attribute 'create_diff'
 class ToolConfirmation:
     tool_name: str
     params: dict[str, Any]

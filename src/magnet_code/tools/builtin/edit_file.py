@@ -69,13 +69,11 @@ class EditTool(Tool):
         else:
             new_content = old_content.replace(params.old_string, params.new_string, 1)
 
-        diff = (
-            FileDiff(
-                path=path,
-                old_content=old_content,
-                new_content=params.content,
-                is_new_file=is_new_file,
-            ),
+        diff = FileDiff(
+            path=path,
+            old_content=old_content,
+            new_content=params.content,
+            is_new_file=is_new_file,
         )
 
         return ToolConfirmation(

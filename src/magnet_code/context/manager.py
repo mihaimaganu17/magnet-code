@@ -165,7 +165,7 @@ I'll continue with the REMAINING tasks only, starting from where we left off."""
         """Prune the tool outputs and return the number of tokens pruned"""
 
         # Count the number of user messages
-        user_message_count = sum(1 for msg in self._messages if msg.rol == "user")
+        user_message_count = sum(1 for msg in self._messages if msg.role == "user")
         
         if user_message_count < 2:
             return 0

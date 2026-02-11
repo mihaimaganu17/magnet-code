@@ -44,7 +44,7 @@ class WriteFileTool(Tool):
             old_content=old_content,
             new_content=params.content,
             is_new_file=is_new_file,
-        ),
+        )
 
         return ToolConfirmation(
             tool_name = self.name,
