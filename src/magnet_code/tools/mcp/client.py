@@ -30,7 +30,7 @@ class MCPClient:
         self.cwd = cwd
         self.status = MCPServerStatus.DISCONNECTED
         self._client: Client | None = None
-        
+
         self._tools: dict[str, MCPToolInfo] = dict()
 
     @property
@@ -41,7 +41,7 @@ class MCPClient:
         if self.config.command:
             env = ShellEnvironmentPolicy(ignore_default_excludes=True)._build_environment()
             env.update(self.config.env)
-            
+
             return StdioTransport(
                 command=self.config.command,
                 args=list(self.config.args),
@@ -50,21 +50,21 @@ class MCPClient:
             )
         else:
             return SSETransport(url=self.config.url)
-        
+
  
     async def connect(self) -> None:
         if self.status == MCPServerStatus.CONNECTED:
             return
-        
+
         self.status = MCPServerStatus.CONNECTING
-        
+
         try:
             self._client = Client(transport=self._create_transport())
-            
+
             # Manually openning the context manager such that we do not end the connection after
             # exiting the function
             await self._client.__aenter__()
-            
+
             tool_result = await self._client.list_tools()
             for tool in tool_result:
                 self._tools[tool.name] = MCPToolInfo(
@@ -73,34 +73,33 @@ class MCPClient:
                     input_schema=(tool.inputSchema if hasattr(tool, "inputSchem") else {}),
                     server_name=self.name
                 )
-                
+
             self.status = MCPServerStatus.CONNECTED
-                
+
         except Exception as e:
             self.status = MCPServerStatus.ERROR
             raise
-        
+
     async def disconnect(self) -> None:
         if self._client:
             await self._client.__aexit__(None, None, None)
             self._client = None
-            
+
         self._tools.clear()
         self.status = MCPServerStatus.DISCONNECTED
-        
-        
+
+
     async def call_tool(self, tool_name: str, arguments: dict[str, Any]):
         if not self._client or self.status != MCPServerStatus.CONNECTED:
             raise RuntimeError(f"Not connected to server {self.name}")
-        
+
         result = await self._client.call_tool(tool_name, arguments)
-        
+
         output = []
         for item in result.content:
             if hasattr(item, "text"):
                 output.append(item.text)
             else:
                 output.append(str(item))
-                
+
         return {"output": "\n".join(output), "is_error": result.is_error,}
-        
