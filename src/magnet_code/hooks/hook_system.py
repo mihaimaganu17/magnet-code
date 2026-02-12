@@ -113,3 +113,9 @@ class HookSystem:
         for hook in self.hooks:
             if hook.trigger == HookTrigger.AFTER_TOOL:
                 await self._run_hook(hook, env)
+
+    async def trigger_on_error(self, error: Exception) -> None:
+        env = self._build_env(HookTrigger.ON_ERROR, error)
+        for hook in self.hooks:
+            if hook.trigger == HookTrigger.ON_ERROR:
+                await self._run_hook(hook, env)

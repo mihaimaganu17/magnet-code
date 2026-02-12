@@ -85,6 +85,7 @@ class HookTrigger(str, Enum):
     AFTER_AGENT = 'after_agent'
     BEFORE_TOOL = 'before_tool'
     AFTER_TOOL = 'after_tool'
+    ON_ERROR = 'on_error'
 
 class HookConfig(BaseModel):
     name: str
