@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import Any
 from magnet_code.config.config import Config
+from magnet_code.hooks.hook_system import HookSystem
 from magnet_code.safety.approval import ApprovalContext, ApprovalDecision, ApprovalManager
 from magnet_code.tools.base import Tool, ToolInvocation, ToolResult
 from magnet_code.tools.builtin import ReadFileTool, get_all_builtin_tools
@@ -69,6 +70,7 @@ class ToolRegistry:
         name: str,
         params: dict[str, Any],
         cwd: Path = None,
+        hook_system: HookSystem | None = None,
         approval_manager: ApprovalManager | None = None,
     ) -> ToolResult:
         """Invoke a tool identified by `name` with the desired `params` in the desired working
@@ -79,16 +81,18 @@ class ToolRegistry:
         # Get the tool by name and check its existence
         tool = self.get(name)
         if tool is None:
-            return ToolResult.error_result(
+            result = ToolResult.error_result(
                 f"Unknown tool: {name}",
                 metadata={"tool_name": name},
             )
+            await hook_system.trigger_after_tool(name, params,result)
+            return result
 
         # Validate that the parameters given from the LLM, match the model tool schema
         validation_errors = tool.validate_params(params)
         # If there are any validation errors, we return them
         if validation_errors:
-            return ToolResult.error_result(
+            result = ToolResult.error_result(
                 f"Invalid parameters: {'; '.join(validation_errors)}",
                 metadata={
                     "tool_name": name,
@@ -96,6 +100,11 @@ class ToolRegistry:
                 },
             )
 
+            await hook_system.trigger_after_tool(name, params, result)
+
+            return result
+
+        await hook_system.trigger_before_tool(name, params)
         # Wrapper type, easy to use
         invocation = ToolInvocation(parameters=params, cwd=cwd)
 
@@ -111,28 +120,34 @@ class ToolRegistry:
                     command=confirmation.command,
                     is_dangerous=confirmation.is_dangerous,
                 )
-                
+
                 decision = await approval_manager.check_approval(context)
-                
+
                 if decision == ApprovalDecision.REJECTED:
-                    return ToolResult.error_result("Operation rejected by safety policy")
-                
+                    result = ToolResult.error_result("Operation rejected by safety policy")
+                    await hook_system.trigger_after_tool(name, params, result)
+                    return result
+
                 elif decision == ApprovalDecision.NEEDS_CONFIRMATION:
                     approved = await approval_manager.request_confirmation(confirmation)
-                    
+
                     if not approved:
-                        return ToolResult.error_result("User rejected the operation")
-                        
+                        result = ToolResult.error_result("User rejected the operation")
+                        await hook_system.trigger_after_tool(name, params, result)
+                        return result
+
+
         try:
             result = await tool.execute(invocation)
         except Exception as e:
             logger.exception(f"Tool {tool.name} raised unexpected error")
-            return ToolResult.error_result(
+            result = ToolResult.error_result(
                 f"Internal error: {str(e)}",
                 metadata={
                     "tool_name": name,
                 },
             )
+            await hook_system.trigger_after_tool(name, params, result)
 
         return result
 
