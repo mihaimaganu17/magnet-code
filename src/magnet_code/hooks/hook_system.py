@@ -77,7 +77,7 @@ class HookSystem:
             env['MAGNET_USER_MESSAGE'] = user_message
 
         if error:
-            env["AI_AGENT_ERROR"] = error
+            env["MAGNET_ERROR"] = error
 
         return env
 
@@ -85,4 +85,12 @@ class HookSystem:
         env = self._build_env(HookTrigger.BEFORE_AGENT, user_message)
         for hook in self.hooks:
             if hook.trigger == HookTrigger.BEFORE_AGENT:
+                await self._run_hook(hook, env)
+
+    async def trigger_after_agent(self, user_message: str, agent_response: str) -> None:
+        env = self._build_env(HookTrigger.AFTER_AGENT, user_message)
+        env['MAGNET_RESPONSE'] = agent_response
+
+        for hook in self.hooks:
+            if hook.trigger == HookTrigger.AFTER_AGENT:
                 await self._run_hook(hook, env)
