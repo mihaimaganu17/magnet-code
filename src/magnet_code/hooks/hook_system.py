@@ -38,7 +38,7 @@ class HookSystem:
                 os.unlink(script_path)
 
     async def _run_command(self, command: str, timeout: float, env: dict[str, str]) -> None:
-        process = await asyncio.create_subprocess_exec(
+        process = await asyncio.create_subprocess_shell(
             command,
             # Capture the standard output and error
             stdout=asyncio.subprocess.PIPE,
