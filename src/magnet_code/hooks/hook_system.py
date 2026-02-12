@@ -90,13 +90,13 @@ class HookSystem:
         return env
 
     async def trigger_before_agent(self, user_message: str) -> None:
-        env = self._build_env(HookTrigger.BEFORE_AGENT, user_message)
+        env = self._build_env(HookTrigger.BEFORE_AGENT, user_message=user_message)
         for hook in self.hooks:
             if hook.trigger == HookTrigger.BEFORE_AGENT:
                 await self._run_hook(hook, env)
 
     async def trigger_after_agent(self, user_message: str, agent_response: str) -> None:
-        env = self._build_env(HookTrigger.AFTER_AGENT, user_message)
+        env = self._build_env(HookTrigger.AFTER_AGENT, user_message=user_message)
         env['MAGNET_RESPONSE'] = agent_response
 
         for hook in self.hooks:
@@ -104,7 +104,7 @@ class HookSystem:
                 await self._run_hook(hook, env)
 
     async def trigger_before_tool(self, tool_name: str, tool_params: dict[str, Any]) -> None:
-        env = self._build_env(HookTrigger.BEFORE_TOOL, tool_name)
+        env = self._build_env(HookTrigger.BEFORE_TOOL, tool_name=tool_name)
         env['MAGNET_TOOL_PARAMS'] = json.dumps(tool_params)
 
         for hook in self.hooks:
@@ -112,7 +112,7 @@ class HookSystem:
                 await self._run_hook(hook, env)
 
     async def trigger_after_tool(self, tool_name: str, tool_params: dict[str, Any], tool_result: ToolResult) -> None:
-        env = self._build_env(HookTrigger.AFTER_TOOL, tool_name)
+        env = self._build_env(HookTrigger.AFTER_TOOL, tool_name=tool_name)
         env['MAGNET_TOOL_PARAMS'] = json.dumps(tool_params)
         env['MAGNET_TOOL_RESULT'] = tool_result.to_model_output()
 
