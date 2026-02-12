@@ -24,7 +24,7 @@ class Session:
         self.mcp_manager = MCPManager(self.config)
         self.chat_compactor = ChatCompactor(self.client)
         self.approval_manager = ApprovalManager(self.config.approval, self.config.cwd,)
-        self.hook_system = HookSystem()
+        self.hook_system = HookSystem(config)
         self.session_id = str(uuid.uuid4())
         self.created_at = datetime.datetime.now()
         self.updated_at = datetime.datetime.now()

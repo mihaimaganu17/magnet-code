@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import signal
 import sys
@@ -79,7 +80,7 @@ class HookSystem:
             env['MAGNET_USER_MESSAGE'] = user_message
 
         if error:
-            env["MAGNET_ERROR"] = error
+            env["MAGNET_ERROR"] = str(error)
 
         return env
 
@@ -99,7 +100,7 @@ class HookSystem:
 
     async def trigger_before_tool(self, tool_name: str, tool_params: dict[str, Any]) -> None:
         env = self._build_env(HookTrigger.BEFORE_TOOL, tool_name)
-        env['MAGNET_TOOL_PARAMS'] = tool_params
+        env['MAGNET_TOOL_PARAMS'] = json.dumps(tool_params)
 
         for hook in self.hooks:
             if hook.trigger == HookTrigger.BEFORE_TOOL:
@@ -107,7 +108,7 @@ class HookSystem:
 
     async def trigger_after_tool(self, tool_name: str, tool_params: dict[str, Any], tool_result: ToolResult) -> None:
         env = self._build_env(HookTrigger.AFTER_TOOL, tool_name)
-        env['MAGNET_TOOL_PARAMS'] = tool_params
+        env['MAGNET_TOOL_PARAMS'] = json.dumps(tool_params)
         env['MAGNET_TOOL_RESULT'] = tool_result.to_model_output()
 
         for hook in self.hooks:
