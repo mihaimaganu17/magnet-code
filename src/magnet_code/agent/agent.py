@@ -161,6 +161,7 @@ class Agent:
                     tool_call.name,
                     tool_call.arguments_delta,
                     self.config.cwd,
+                    self.session.hook_system,
                     self.session.approval_manager,
                 )
 
