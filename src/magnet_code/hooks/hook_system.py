@@ -19,12 +19,13 @@ class HookSystem:
         self.config = config
         self.hooks: list[HookConfig] = []
 
-        if not self.config.hooks_enabled:
+        if self.config.hooks_enabled:
             self.hooks = [hook for hook in self.config.hooks if hook.enabled]
 
     async def _run_hook(self, hook: HookConfig, env: dict[str, str]) -> None:
+        print(hook.command)
         if hook.command:
-            await self._run_command(*hook.command, hook.timeout_sec, env)
+            await self._run_command(hook.command, hook.timeout_sec, env)
         else:
             # running a .sh script
             with tempfile.NamedTemporaryFile(mode="w", suffix=".sh") as f:
@@ -38,29 +39,33 @@ class HookSystem:
                 os.unlink(script_path)
 
     async def _run_command(self, command: str, timeout: float, env: dict[str, str]) -> None:
-        process = await asyncio.create_subprocess_shell(
-            command,
-            # Capture the standard output and error
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            cwd=self.config.cwd,
-            env=env,
-            # Create a new OS session and process group
-            start_new_session=True,
-        )
-
         try:
-            await asyncio.wait_for(
-                process.communicate(),
-                timeout=timeout,
+            process = await asyncio.create_subprocess_shell(
+                command,
+                # Capture the standard output and error
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=self.config.cwd,
+                env=env,
+                # Create a new OS session and process group
+                start_new_session=True,
             )
-        except asyncio.TimeoutError:
-            # If we have a timeout error, force kill the shell
-            if sys.platform != "win32":
-                os.killpg(os.getpgid(process), signal.SIGKILL)
-            else:
-                process.kill()
-            await process.wait()
+            print(process)
+
+            try:
+                await asyncio.wait_for(
+                    process.communicate(),
+                    timeout=timeout,
+                )
+            except asyncio.TimeoutError:
+                # If we have a timeout error, force kill the shell
+                if sys.platform != "win32":
+                    os.killpg(os.getpgid(process), signal.SIGKILL)
+                else:
+                    process.kill()
+                await process.wait()
+        except Exception as e:
+            print(e)
 
     def _build_env(
         self,

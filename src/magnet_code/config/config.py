@@ -97,6 +97,7 @@ class HookConfig(BaseModel):
 
     @model_validator(mode='after')
     def validate_hook(self) -> HookConfig:
+        print(self.name)
         if not self.command and not self.script:
             raise ValueError("Hook must either have 'command' or script")
         return self
