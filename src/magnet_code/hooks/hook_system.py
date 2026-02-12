@@ -70,7 +70,7 @@ class HookSystem:
     def _build_env(
         self,
         trigger: HookTrigger,
-        tool_name: str | None,
+        tool_name: str | None=None,
         user_message: str | None = None,
         error: Exception | None = None,
     ) -> dict[str, str]:

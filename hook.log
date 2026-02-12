@@ -1,1 +1,0 @@
-[HOOK] {"timestamp": "2026-02-12T20:09:50.378112", "trigger": "before_agent", "cwd": "/Users/ace/magic/1_projects/magnet-code", "tool_name": "echo out hello world for me", "user_message": null, "error": null}

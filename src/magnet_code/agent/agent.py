@@ -31,7 +31,7 @@ class Agent:
         """Run the agent one time with the given message. The agent yields events for the start of
         the agentic loop, the end of the agentic loop and any potential error in the loop, as well
         as the text delta progress and the completion of a message."""
-        await self.session.hook_system.trigger_before_agent(message)
+        await self.session.hook_system.trigger_before_agent(user_message=message)
         # The first event in an agent's run is communicating back that the agent has started
         yield AgentEvent.agent_start(message)
 
