@@ -9,7 +9,7 @@ from magnet_code.client.llm_client import LLMClient
 
 import click
 
-from magnet_code.config.config import Config
+from magnet_code.config.config import ApprovalPolicy, Config
 from magnet_code.config.loader import load_config
 from magnet_code.ui.tui import TUI, get_console
 
@@ -188,6 +188,17 @@ class CLI:
                 console.print(f'[success]Model changed to: {cmd_args}[/success]')
             else:
                 console.print(f"Current model: {self.config.model_name}")
+        elif cmd_name == '/approval':
+            if cmd_args:
+                try:
+                    approval = ApprovalPolicy(cmd_args)
+                    self.config.approval = approval
+                    console.print(f"[success]Approval policy changed to: {approval}[/success]")
+                except:
+                    console.print(f"[error]Incorrect approval policy {cmd_args}[/error]")
+                    console.print(f"Valid options: {', '.join(p for p in ApprovalPolicy)}")
+            else:
+                console.print(f"Current approval policy: {self.config.approval}")
         else:
             console.print(f'[error]Unknown command: {cmd_name}[/error]')
 
