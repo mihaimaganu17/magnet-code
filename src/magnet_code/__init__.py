@@ -205,7 +205,11 @@ class CLI:
             console.print("\n[bold]Session statistics[/bold]")
             for key, value in stats.items():
                 console.print(f"  {key}: {value}")
-            pass
+        elif cmd_name == '/tools':
+            tools = self.agent.session.tool_registry.get_tools()
+            console.print(f"\n[bold]Available tools ({len(tools)})[/bold]")
+            for tool in tools:
+                console.print(f"  🔵 {tool.name}")
         else:
             console.print(f'[error]Unknown command: {cmd_name}[/error]')
 
