@@ -182,6 +182,12 @@ class CLI:
             console.print(f"  Working Dir: {self.config.cwd}")
             console.print(f"  Max Turns: {self.config.max_turns}")
             console.print(f"  Hooks Enabled: {self.config.hooks_enabled}")
+        elif cmd_name == '/model':
+            if cmd_args:
+                self.config.model_name = cmd_args # /model
+                console.print(f'[success]Model changed to: {cmd_args}[/success]')
+            else:
+                console.print(f"Current model: {self.config.model_name}")
         else:
             console.print(f'[error]Unknown command: {cmd_name}[/error]')
 
