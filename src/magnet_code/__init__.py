@@ -174,6 +174,14 @@ class CLI:
             self.agent.session.context_manager.clear()
             self.agent.session.loop_detector.clear()
             console.print('[success]Conversation clear[/success]')
+        elif command == '/config':
+            console.print("\n[bold]Current Configuration[/bold]")
+            console.print(f"  Model: {self.config.model_name}")
+            console.print(f"  Temperature: {self.config.temperature}")
+            console.print(f"  Approval: {self.config.approval.value}")
+            console.print(f"  Working Dir: {self.config.cwd}")
+            console.print(f"  Max Turns: {self.config.max_turns}")
+            console.print(f"  Hooks Enabled: {self.config.hooks_enabled}")
         else:
             console.print(f'[error]Unknown command: {cmd_name}[/error]')
 
