@@ -38,14 +38,17 @@ class CLI:
         while the agent also keeps track of previous context."""
         # Print welcome message when running the interactive mode
         self.tui.print_welcome(
-            'Magnet',
+            "Magnet",
             lines=[
                 f"model: {self.config.model_name}",
                 f"cwd: {self.config.cwd}",
                 "commands: /help /config /approval /model /exit",
             ],
         )
-        async with Agent(self.config, confirmation_callback=self.tui.handle_confirmation) as agent:
+        async with Agent(
+            self.config,
+            confirmation_callback=self.tui.handle_confirmation,
+        ) as agent:
             self.agent = agent
 
             while True:
@@ -53,6 +56,14 @@ class CLI:
                     user_input = console.input("\n[user]>[/user] ").strip()
                     if not user_input:
                         continue
+
+                    if user_input.startswith("/"):
+                        should_continue = self._handle_command(user_input)
+
+                        if not should_continue:
+                            break
+                        continue
+
                     # Process the message and return the agent's response
                     await self._process_message(user_input)
                 except KeyboardInterrupt:
@@ -149,11 +160,14 @@ class CLI:
         return final_response
 
 
+    def _handle_command(self, command: str) -> bool:
+        return False
+
 @click.command()
 @click.argument("prompt", required=False)
 @click.option(
-    '--cwd',
-    '-c',
+    "--cwd",
+    "-c",
     type=click.Path(exists=True, file_okay=False, path_type=Path),
     help="Current working directory",
 )
@@ -167,18 +181,18 @@ def main(
         config = load_config(cwd=cwd)
     except Exception as e:
         console.print(f"[error]Configuration Error: {e}[/error]")
-        
+
     # Validate the config and fail if there are any validation errors
     errors = config.validate()
-    
+
     if errors:
         for error in errors:
             console.print(f"[error]{error}[/error]")
         sys.exit(1)
-        
+
     # Create a new CLI
     cli = CLI(config)
-        
+
     messages = [{"role": "user", "content": prompt}]
     if prompt:
         result = asyncio.run(cli.run_single(prompt))
