@@ -1,5 +1,6 @@
 import datetime
 import json
+from typing import Any
 import uuid
 from magnet_code.client.llm_client import LLMClient
 from magnet_code.config.config import Config
@@ -74,3 +75,14 @@ class Session:
         self.updated_at = datetime.datetime.now()
 
         return self._turn_count
+
+    def get_stats(self) -> dict[str, Any]:
+        return {
+            "session_id": self.session_id,
+            "created_at": self.created_at.isoformat(),
+            'turn_count': self._turn_count,
+            "message_count": self.context_manager.message_count,
+            "token_usage": self.context_manager.total_usage,
+            "tools_count": len(self.tool_registry.get_tools()),
+            "mcp_servers": len(self.tool_registry.connected_mcp_servers),
+        }

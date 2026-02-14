@@ -199,6 +199,13 @@ class CLI:
                     console.print(f"Valid options: {', '.join(p for p in ApprovalPolicy)}")
             else:
                 console.print(f"Current approval policy: {self.config.approval}")
+        elif cmd_name == '/stats':
+            # Display all relevant statistics for this session
+            stats = self.agent.session.get_stats()
+            console.print("\n[bold]Session statistics[/bold]")
+            for key, value in stats.items():
+                console.print(f"  {key}: {value}")
+            pass
         else:
             console.print(f'[error]Unknown command: {cmd_name}[/error]')
 
