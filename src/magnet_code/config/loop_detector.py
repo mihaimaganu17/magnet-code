@@ -19,7 +19,7 @@ class LoopDetector:
             output.append(details.get('tool_name', ''))
             args = details.get('args', {})
 
-            if isinstance(args, {}):
+            if isinstance(args, dict):
                 for k in sorted(args.keys()):
                     output.append(f"{k}={str(args[k])}")
 

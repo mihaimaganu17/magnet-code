@@ -161,11 +161,7 @@ class Agent:
                     args=tool_call.arguments_delta,
                 )
 
-                loop_detected = self.session.loop_detector.check_for_loop()
-                if loop_detected:
-                    loop_prompt = create_loop_breaker_prompt(loop_detected)
-                    self.session.context_manager.add_user_message(loop_prompt)
-                    continue
+                
 
                 # Invoke the tool
                 result = await self.session.tool_registry.invoke(
@@ -199,6 +195,15 @@ class Agent:
                     tool_result.tool_call_id,
                     tool_result.content,
                 )
+
+            loop_detected = self.session.loop_detector.check_for_loop()
+            if loop_detected:
+                # TODO: How are we detecting this?
+                loop_prompt = create_loop_breaker_prompt(loop_detected)
+                self.session.context_manager.add_user_message(loop_prompt)
+                # TODO: Add a new TUI event to handle that
+                print(loop_detected)
+                continue
 
             if usage:
                 self.session.context_manager.set_latest_usage(usage)
