@@ -4,6 +4,7 @@ import uuid
 from magnet_code.client.llm_client import LLMClient
 from magnet_code.config.config import Config
 from magnet_code.config.loader import get_data_dir
+from magnet_code.config.loop_detector import LoopDetector
 from magnet_code.context.compaction import ChatCompactor
 from magnet_code.context.manager import ContextManager
 from magnet_code.hooks.hook_system import HookSystem
@@ -24,6 +25,7 @@ class Session:
         self.mcp_manager = MCPManager(self.config)
         self.chat_compactor = ChatCompactor(self.client)
         self.approval_manager = ApprovalManager(self.config.approval, self.config.cwd,)
+        self.loop_detector = LoopDetector()
         self.hook_system = HookSystem(config)
         self.session_id = str(uuid.uuid4())
         self.created_at = datetime.datetime.now()

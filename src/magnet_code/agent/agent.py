@@ -11,6 +11,7 @@ from magnet_code.client.response import (
     ToolResultMessage,
 )
 from magnet_code.config.config import Config
+from magnet_code.prompts.system import create_loop_breaker_prompt
 from magnet_code.tools.base import ToolConfirmation
 
 
@@ -18,9 +19,7 @@ class Agent:
     def __init__(
         self,
         config=Config,
-        confirmation_callback: (
-            Callable[[ToolConfirmation], bool] | None
-        ) = None,
+        confirmation_callback: Callable[[ToolConfirmation], bool] | None = None,
     ):
         self.config = config
         # Create a new LLM client for this agent that will be used to generate responses
@@ -135,6 +134,7 @@ class Agent:
             # complete text response accumulated
             if response_text:
                 yield AgentEvent.text_complete(response_text)
+                self.session.loop_detector.record_action("response", text=response_text)
 
             if not tool_calls:
                 if usage:
@@ -155,6 +155,17 @@ class Agent:
                     tool_call.name,
                     tool_call.arguments_delta,
                 )
+                self.session.loop_detector.record_action(
+                    "tool_call",
+                    tool_name=tool_call.name,
+                    args=tool_call.arguments_delta,
+                )
+
+                loop_detected = self.session.loop_detector.check_for_loop()
+                if loop_detected:
+                    loop_prompt = create_loop_breaker_prompt(loop_detected)
+                    self.session.context_manager.add_user_message(loop_prompt)
+                    continue
 
                 # Invoke the tool
                 result = await self.session.tool_registry.invoke(
