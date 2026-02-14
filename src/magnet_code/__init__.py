@@ -170,6 +170,10 @@ class CLI:
             return False
         elif command == '/help':
             self.tui.show_help()
+        elif command == '/clear':
+            self.agent.session.context_manager.clear()
+            self.agent.session.loop_detector.clear()
+            console.print('[success]Conversation clear[/success]')
         else:
             console.print(f'[error]Unknown command: {cmd_name}[/error]')
 

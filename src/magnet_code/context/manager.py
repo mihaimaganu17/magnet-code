@@ -104,10 +104,10 @@ class ContextManager:
 
     def add_usage(self, usage: TokenUsage):
         self._total_usage += usage
-        
+
     def replace_with_summary(self, summary: str) -> None:
         self._messages = []
-        
+
         continuation_content = f"""# Context Restoration (Previous Session Compacted)
 
         The previous conversation was compacted due to context length limits. Below is a detailed summary of the work done so far. 
@@ -121,7 +121,7 @@ class ContextManager:
         ---
 
         Resume work from where we left off. Focus ONLY on the remaining and in progress tasks."""
-        
+
         summary_item = MessageItem(
             role='user',
             content=continuation_content,
@@ -166,10 +166,10 @@ I'll continue with the REMAINING tasks only, starting from where we left off."""
 
         # Count the number of user messages
         user_message_count = sum(1 for msg in self._messages if msg.role == "user")
-        
+
         if user_message_count < 2:
             return 0
-        
+
         # Number of total tokens
         total_tokens = 0
         # Number of tokens we are pruning
@@ -184,14 +184,14 @@ I'll continue with the REMAINING tasks only, starting from where we left off."""
                     break
                 tokens = msg.token_count or count_tokens(msg.content, self._model_name)
                 total_tokens += tokens
-                
+
                 if total_tokens > self.PRUNE_PROTECT_TOKENS:
                     pruned_tokens += tokens
                     to_prune.append(msg)
-                    
+
         if pruned_tokens < self.PRUNE_MINIMUM_TOKENS:
             return 0
-        
+
         # number of messages we pruned
         pruned_count = 0
 
@@ -200,5 +200,8 @@ I'll continue with the REMAINING tasks only, starting from where we left off."""
             msg.token_count = count_tokens(msg.content, self._model_name)
             msg.pruned_at = datetime.now()
             pruned_count += 1
-        
+
         return pruned_count
+
+    def clear(self) -> None:
+        self._messages = []

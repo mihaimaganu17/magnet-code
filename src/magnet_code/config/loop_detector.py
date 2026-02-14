@@ -48,3 +48,6 @@ class LoopDetector:
                     return f"Detected repeating cycle of length {cycle_len}"
 
         return None
+
+    def clear(self) -> None:
+        self._history.clear()
