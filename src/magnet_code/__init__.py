@@ -168,6 +168,8 @@ class CLI:
 
         if cmd_name == "/exit" or cmd_name == '/quit':
             return False
+        elif command == '/help':
+            self.tui.show_help()
         else:
             console.print(f'[error]Unknown command: {cmd_name}[/error]')
 
