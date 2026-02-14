@@ -161,7 +161,18 @@ class CLI:
 
 
     def _handle_command(self, command: str) -> bool:
-        return False
+        cmd = command.lower().strip()
+        parts = cmd.split(maxsplit=1)
+        cmd_name = parts[0]
+        cmd_args = parts[1] if len(parts) > 1 else ""
+
+        if cmd_name == "/exit" or cmd_name == '/quit':
+            return False
+        else:
+            console.print(f'[error]Unknown command: {cmd_name}[/error]')
+
+        return True
+
 
 @click.command()
 @click.argument("prompt", required=False)
