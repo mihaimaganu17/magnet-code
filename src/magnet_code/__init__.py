@@ -227,6 +227,7 @@ class CLI:
                 updated_at=self.agent.session.updated_at,
                 turn_count=self.agent.session.turn_count,
                 messages=self.agent.session.context_manager.get_messages(),
+                total_usage=self.agent.session.context_manager.total_usage,
             )
             persistence_manager.save_session(session_snapshot)
             console.print(f'[success]Session saved: {self.agent.session.session_id}[/success]')
