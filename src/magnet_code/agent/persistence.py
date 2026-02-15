@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
+import json
 import os
 from typing import Any
 from magnet_code.config.loader import get_data_dir
@@ -42,4 +43,11 @@ class PersistenceManager:
         self.sessions_dir.mkdir(parents=True, exist_ok=True)
         os.chmod(self.sessions_dir, 0o700)
 
-    def save_session(self, )
+    def save_session(self, snapshot: SessionSnahpshot) -> None:
+        file_path = self.sessions_dir / f"{snapshot.session_id}.json"
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(snapshot.to_dict(), f, indent=2)
+
+        # ReadWrite permissions
+        os.chmod(file_path, 0o600)
