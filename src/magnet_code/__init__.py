@@ -314,8 +314,10 @@ class CLI:
                 persistence_manager = PersistenceManager()
                 snapshot = persistence_manager.load_checkpoint(cmd_args)
                 if not snapshot:
-                    console.print(f"[error]Session {cmd_args} does not exist.[/error]")
+                    console.print(f"[error]Checkpoint {cmd_args} does not exist.[/error]")
                 else:
+                    # We have to preserve the current session id
+                    session_id = self.agent.session.session_id
                     session = Session(
                         config=self.config,
                     )
@@ -326,7 +328,7 @@ class CLI:
                     await session.initialize()
 
                     # Overwrite the random session id after spawning with the saved id
-                    session.session_id = snapshot.session_id
+                    session.session_id = session_id
                     session.created_at = snapshot.created_at
                     session.updated_at = snapshot.updated_at
                     session.turn_count = snapshot.turn_count
@@ -348,7 +350,7 @@ class CLI:
                                 msg.get("tool_call_id", ""), msg.get("content", "")
                             )
                     self.agent.session = session
-                    console.print(f"[success]Resumed session: {session.session_id}[/success]")
+                    console.print(f"[success]Restored checkpoint: {checkpoint_id}[/success]")
         else:
             console.print(f"[error]Unknown command: {cmd_name}[/error]")
 
