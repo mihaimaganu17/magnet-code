@@ -18,6 +18,8 @@ from magnet_code.ui.tui import TUI, get_console
 
 console = get_console()
 
+# TODO: Add LSP for the agent
+# TODO: Add sandboxing
 
 class CLI:
     def __init__(self, config: Config):
