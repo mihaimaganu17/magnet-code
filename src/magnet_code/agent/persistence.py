@@ -18,8 +18,8 @@ class SessionSnahpshot:
     def to_dict(self) -> dict[str, Any]:
         return {
             "session_id": self.session_id,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
             "turn_count": self.turn_count,
             "messages": self.messages,
         }
@@ -28,8 +28,8 @@ class SessionSnahpshot:
     def from_dict(cls, data: dict[str, Any]) -> SessionSnahpshot:
         return cls(
             session_id=data["session_id"],
-            created_at=data["created_at"],
-            updated_at=data["updated_at"],
+            created_at=datetime.fromisoformat(data["created_at"]),
+            updated_at=datetime.fromisoformat(data["updated_at"]),
             turn_count=data["turn_count"],
             messages=data["messages"],
         )

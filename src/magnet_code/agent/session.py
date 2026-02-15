@@ -36,7 +36,10 @@ class Session:
         # How many turns have been taking place in the session
         self._turn_count = 0
 
-    
+    @property
+    def turn_count(self) -> int:
+        return self._turn_count
+
     async def initialize(self) -> None:
         await self.mcp_manager.initialize()
         self.mcp_manager.register_tools(self.tool_registry)

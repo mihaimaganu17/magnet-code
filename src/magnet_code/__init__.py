@@ -1,9 +1,11 @@
 import asyncio
+from datetime import datetime
 from pathlib import Path
 import sys
 from typing import Any
 from magnet_code.agent.agent import Agent
 from magnet_code.agent.events import AgentEventType
+from magnet_code.agent.persistence import PersistenceManager, SessionSnahpshot
 from magnet_code.client.llm_client import LLMClient
 
 
@@ -218,7 +220,16 @@ class CLI:
                 status_color = "green" if status == "connected" else "red"
                 console.print(f"  🔵 {server['name']}: [{status_color}]{status}[/{status_color}] ({server['tools']} tools)")
         elif cmd_name == '/save':
-            pass
+            persistence_manager = PersistenceManager()
+            session_snapshot = SessionSnahpshot(
+                session_id=self.agent.session.session_id,
+                created_at=self.agent.session.created_at,
+                updated_at=self.agent.session.updated_at,
+                turn_count=self.agent.session.turn_count,
+                messages=self.agent.session.context_manager.get_messages(),
+            )
+            persistence_manager.save_session(session_snapshot)
+            console.print(f'[success]Session command: {self.agent.session.session_id}[/success]')
         else:
             console.print(f'[error]Unknown command: {cmd_name}[/error]')
 
