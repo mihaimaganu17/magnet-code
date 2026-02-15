@@ -237,6 +237,14 @@ class CLI:
             console.print(f"\n[bold]Saved sessions ({len(sessions)})[/bold]")
             for s in sessions:
                 console.print(f"  {s['session_id']} (turns: {s["turn_count"]}, updated: {s["updated_at"]})")
+        elif cmd_name == "/resume":
+            # Resume a session
+            if not cmd_args:
+                console.print(f"[error]Usage: /resume <session_id>[/error]")
+            persistence_manager = PersistenceManager()
+        elif cmd_name == "/restore":
+            # Restore a previous checkpoint
+            pass
         else:
             console.print(f'[error]Unknown command: {cmd_name}[/error]')
 

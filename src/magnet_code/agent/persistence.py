@@ -70,3 +70,14 @@ class PersistenceManager:
 
         sessions.sort(key=lambda x: x['updated_at'], reverse=True)
         return sessions
+
+    def load_session(self, session_id: str) -> SessionSnahpshot | None:
+        file_path = self.sessions_dir / f"{session_id}.json"
+
+        if not file_path.exists():
+            return None
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        return SessionSnahpshot.from_dict(data)
