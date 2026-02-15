@@ -308,7 +308,47 @@ class CLI:
             )
         elif cmd_name == "/restore":
             # Restore a previous checkpoint
-            pass
+            if not cmd_args:
+                console.print(f"[error]Usage: /restore <checkpoint_id>[/error]")
+            else:
+                persistence_manager = PersistenceManager()
+                snapshot = persistence_manager.load_checkpoint(cmd_args)
+                if not snapshot:
+                    console.print(f"[error]Session {cmd_args} does not exist.[/error]")
+                else:
+                    session = Session(
+                        config=self.config,
+                    )
+                    # Close the current session
+                    await self.agent.session.client.close()
+                    if self.agent.session.mcp_manager:
+                        await self.agent.session.mcp_manager.shutdown()
+                    await session.initialize()
+
+                    # Overwrite the random session id after spawning with the saved id
+                    session.session_id = snapshot.session_id
+                    session.created_at = snapshot.created_at
+                    session.updated_at = snapshot.updated_at
+                    session.turn_count = snapshot.turn_count
+                    session.context_manager.total_usage = snapshot.total_usage
+
+                    for msg in snapshot.messages:
+                        if msg.get("role") == "system":
+                            continue
+                        elif msg["role"] == "user":
+                            session.context_manager.add_user_message(
+                                msg.get("content", "")
+                            )
+                        elif msg["role"] == "assistant":
+                            session.context_manager.add_assistant_message(
+                                msg.get("content", ""), msg.get("tool_calls")
+                            )
+                        elif msg["role"] == "tool":
+                            session.context_manager.add_tool_result(
+                                msg.get("tool_call_id", ""), msg.get("content", "")
+                            )
+                    self.agent.session = session
+                    console.print(f"[success]Resumed session: {session.session_id}[/success]")
         else:
             console.print(f"[error]Unknown command: {cmd_name}[/error]")
 

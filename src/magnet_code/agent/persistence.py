@@ -98,3 +98,15 @@ class PersistenceManager:
         os.chmod(file_path, 0o600)
 
         return checkpoint_id
+
+
+    def load_checkpoint(self, checkpoint_id: str) -> SessionSnahpshot | None:
+        file_path = self.checkpoints_dir/ f"{checkpoint_id}.json"
+
+        if not file_path.exists():
+            return None
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        return SessionSnahpshot.from_dict(data)
