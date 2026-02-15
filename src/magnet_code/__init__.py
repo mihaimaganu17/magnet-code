@@ -292,7 +292,20 @@ class CLI:
                             )
                     self.agent.session = session
                     console.print(f"[success]Resumed session: {session.session_id}[/success]")
-
+        elif cmd_name == "/checkpoint":
+            persistence_manager = PersistenceManager()
+            session_snapshot = SessionSnahpshot(
+                session_id=self.agent.session.session_id,
+                created_at=self.agent.session.created_at,
+                updated_at=self.agent.session.updated_at,
+                turn_count=self.agent.session.turn_count,
+                messages=self.agent.session.context_manager.get_messages(),
+                total_usage=self.agent.session.context_manager.total_usage,
+            )
+            persistence_manager.save_checkpoint(session_snapshot)
+            console.print(
+                f"[success]Checkpoint saved: {self.agent.session.session_id}[/success]"
+            )
         elif cmd_name == "/restore":
             # Restore a previous checkpoint
             pass
