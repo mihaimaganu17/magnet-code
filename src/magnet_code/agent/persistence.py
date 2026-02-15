@@ -87,4 +87,14 @@ class PersistenceManager:
 
 
     def save_checkpoint(self, snapshot: SessionSnahpshot) -> str:
-        pass
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        checkpoint_id = f"{snapshot.session_id}_{timestamp}"
+        file_path = self.checkpoints_dir / f"{checkpoint_id}"
+
+        with open(file_path, "w", encoding='utf-8') as fp:
+            json.dump(snapshot.to_dict(), fp, indent=2)
+
+        # ReadWrite permissions
+        os.chmod(file_path, 0o600)
+
+        return checkpoint_id
