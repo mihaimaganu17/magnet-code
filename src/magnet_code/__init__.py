@@ -262,9 +262,17 @@ class CLI:
                     session = Session(
                         config=self.config,
                     )
-                    session.created_at = (snapshot.created_at,)
-                    session.updated_at = (snapshot.updated_at,)
-                    session.turn_count = (snapshot.turn_count,)
+                    # Close the current session
+                    await self.agent.session.client.close()
+                    if self.agent.session.mcp_manager:
+                        await self.agent.session.mcp_manager.shutdown()
+                    await session.initialize()
+
+                    # Overwrite the random session id after spawning with the saved id
+                    session.session_id = snapshot.session_id
+                    session.created_at = snapshot.created_at
+                    session.updated_at = snapshot.updated_at
+                    session.turn_count = snapshot.turn_count
                     session.context_manager.total_usage = snapshot.total_usage
 
                     for msg in snapshot.messages:
@@ -282,10 +290,6 @@ class CLI:
                             session.context_manager.add_tool_result(
                                 msg.get("tool_call_id", ""), msg.get("content", "")
                             )
-                    # Close the current session
-                    await self.agent.session.client.close()
-                    await self.agent.session.mcp_manager.close()
-                    await session.initialize()
                     self.agent.session = session
                     console.print(f"[success]Resumed session: {session.session_id}[/success]")
 

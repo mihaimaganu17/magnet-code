@@ -39,6 +39,10 @@ class Session:
     @property
     def turn_count(self) -> int:
         return self._turn_count
+    
+    @turn_count.setter
+    def turn_count(self, turn_count: int):
+        self._turn_count = turn_count
 
     async def initialize(self) -> None:
         await self.mcp_manager.initialize()
