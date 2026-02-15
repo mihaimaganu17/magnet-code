@@ -95,7 +95,7 @@ class ContextManager:
 
         for item in self._messages:
             messages.append(item.to_dict())
-            
+
         return messages
 
     def needs_compression(self) -> bool:
