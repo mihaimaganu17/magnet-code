@@ -48,7 +48,7 @@ class PersistenceManager:
         self.checkpoints_dir = self.data_dir / 'checkpoints'
         self.checkpoints_dir.mkdir(parents=True, exist_ok=True)
         os.chmod(self.sessions_dir, 0o700)
-        os.chmod(self.checkpoints, 0o700)
+        os.chmod(self.checkpoints_dir, 0o700)
 
     def save_session(self, snapshot: SessionSnahpshot) -> None:
         file_path = self.sessions_dir / f"{snapshot.session_id}.json"

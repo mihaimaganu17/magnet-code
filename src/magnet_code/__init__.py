@@ -302,9 +302,9 @@ class CLI:
                 messages=self.agent.session.context_manager.get_messages(),
                 total_usage=self.agent.session.context_manager.total_usage,
             )
-            persistence_manager.save_checkpoint(session_snapshot)
+            checkpoint_id = persistence_manager.save_checkpoint(session_snapshot)
             console.print(
-                f"[success]Checkpoint saved: {self.agent.session.session_id}[/success]"
+                f"[success]Checkpoint created: {checkpoint_id}[/success]"
             )
         elif cmd_name == "/restore":
             # Restore a previous checkpoint
