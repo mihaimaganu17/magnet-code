@@ -16,6 +16,7 @@ def get_config_dir() -> Path:
     return Path(user_config_dir())
 
 def get_data_dir() -> Path:
+    print(user_data_dir(".magnet"))
     return Path(user_data_dir(".magnet"))
 
 def get_system_config_path() -> Path:

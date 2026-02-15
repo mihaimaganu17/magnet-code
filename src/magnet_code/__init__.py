@@ -229,7 +229,7 @@ class CLI:
                 messages=self.agent.session.context_manager.get_messages(),
             )
             persistence_manager.save_session(session_snapshot)
-            console.print(f'[success]Session command: {self.agent.session.session_id}[/success]')
+            console.print(f'[success]Session saved: {self.agent.session.session_id}[/success]')
         else:
             console.print(f'[error]Unknown command: {cmd_name}[/error]')
 

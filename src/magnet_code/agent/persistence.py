@@ -51,3 +51,18 @@ class PersistenceManager:
 
         # ReadWrite permissions
         os.chmod(file_path, 0o600)
+
+    def list_sessions(self) -> list[dict[str, Any]]:
+        sessions = []
+        for file_path in self.sessions_dir.glob("*.json"):
+            with open(file_path, "r", encoding='utf-8') as f:
+                data = json.load(f)
+            sessions.append({
+                "session_id": data["session_id"],
+                "created_at": data["created_at"],
+                "updated_at": data["updated_at"],
+                "turn_count": data["turn_count"],
+            })
+
+        sessions.sort(key=lambda x: x['udpated_at'], revers=True)
+        return sessions
