@@ -6,6 +6,7 @@ from typing import Any
 from magnet_code.agent.agent import Agent
 from magnet_code.agent.events import AgentEventType
 from magnet_code.agent.persistence import PersistenceManager, SessionSnahpshot
+from magnet_code.agent.session import Session
 from magnet_code.client.llm_client import LLMClient
 
 
@@ -60,7 +61,7 @@ class CLI:
                         continue
 
                     if user_input.startswith("/"):
-                        should_continue = self._handle_command(user_input)
+                        should_continue = await self._handle_command(user_input)
 
                         if not should_continue:
                             break
@@ -161,22 +162,21 @@ class CLI:
         # Return the final response gathered by the agent
         return final_response
 
-
-    def _handle_command(self, command: str) -> bool:
+    async def _handle_command(self, command: str) -> bool:
         cmd = command.lower().strip()
         parts = cmd.split(maxsplit=1)
         cmd_name = parts[0]
         cmd_args = parts[1] if len(parts) > 1 else ""
 
-        if cmd_name in { '/exit', '/quit', '/q'}:
+        if cmd_name in {"/exit", "/quit", "/q"}:
             return False
-        elif command == '/help':
+        elif command == "/help":
             self.tui.show_help()
-        elif command == '/clear':
+        elif command == "/clear":
             self.agent.session.context_manager.clear()
             self.agent.session.loop_detector.clear()
-            console.print('[success]Conversation clear[/success]')
-        elif command == '/config':
+            console.print("[success]Conversation clear[/success]")
+        elif command == "/config":
             console.print("\n[bold]Current Configuration[/bold]")
             console.print(f"  Model: {self.config.model_name}")
             console.print(f"  Temperature: {self.config.temperature}")
@@ -184,30 +184,36 @@ class CLI:
             console.print(f"  Working Dir: {self.config.cwd}")
             console.print(f"  Max Turns: {self.config.max_turns}")
             console.print(f"  Hooks Enabled: {self.config.hooks_enabled}")
-        elif cmd_name == '/model':
+        elif cmd_name == "/model":
             if cmd_args:
-                self.config.model_name = cmd_args # /model
-                console.print(f'[success]Model changed to: {cmd_args}[/success]')
+                self.config.model_name = cmd_args  # /model
+                console.print(f"[success]Model changed to: {cmd_args}[/success]")
             else:
                 console.print(f"Current model: {self.config.model_name}")
-        elif cmd_name == '/approval':
+        elif cmd_name == "/approval":
             if cmd_args:
                 try:
                     approval = ApprovalPolicy(cmd_args)
                     self.config.approval = approval
-                    console.print(f"[success]Approval policy changed to: {approval}[/success]")
+                    console.print(
+                        f"[success]Approval policy changed to: {approval}[/success]"
+                    )
                 except:
-                    console.print(f"[error]Incorrect approval policy {cmd_args}[/error]")
-                    console.print(f"Valid options: {', '.join(p for p in ApprovalPolicy)}")
+                    console.print(
+                        f"[error]Incorrect approval policy {cmd_args}[/error]"
+                    )
+                    console.print(
+                        f"Valid options: {', '.join(p for p in ApprovalPolicy)}"
+                    )
             else:
                 console.print(f"Current approval policy: {self.config.approval}")
-        elif cmd_name == '/stats':
+        elif cmd_name == "/stats":
             # Display all relevant statistics for this session
             stats = self.agent.session.get_stats()
             console.print("\n[bold]Session statistics[/bold]")
             for key, value in stats.items():
                 console.print(f"  {key}: {value}")
-        elif cmd_name == '/tools':
+        elif cmd_name == "/tools":
             tools = self.agent.session.tool_registry.get_tools()
             console.print(f"\n[bold]Available tools ({len(tools)})[/bold]")
             for tool in tools:
@@ -216,10 +222,12 @@ class CLI:
             mcp_servers = self.agent.session.mcp_manager.get_all_servers()
             console.print(f"\n[bold]MCP Servers({len(mcp_servers)})[/bold]")
             for server in mcp_servers:
-                status = server['status']
+                status = server["status"]
                 status_color = "green" if status == "connected" else "red"
-                console.print(f"  🔵 {server['name']}: [{status_color}]{status}[/{status_color}] ({server['tools']} tools)")
-        elif cmd_name == '/save':
+                console.print(
+                    f"  🔵 {server['name']}: [{status_color}]{status}[/{status_color}] ({server['tools']} tools)"
+                )
+        elif cmd_name == "/save":
             persistence_manager = PersistenceManager()
             session_snapshot = SessionSnahpshot(
                 session_id=self.agent.session.session_id,
@@ -230,23 +238,62 @@ class CLI:
                 total_usage=self.agent.session.context_manager.total_usage,
             )
             persistence_manager.save_session(session_snapshot)
-            console.print(f'[success]Session saved: {self.agent.session.session_id}[/success]')
-        elif cmd_name == '/sessions':
+            console.print(
+                f"[success]Session saved: {self.agent.session.session_id}[/success]"
+            )
+        elif cmd_name == "/sessions":
             persistence_manager = PersistenceManager()
             sessions = persistence_manager.list_sessions()
             console.print(f"\n[bold]Saved sessions ({len(sessions)})[/bold]")
             for s in sessions:
-                console.print(f"  {s['session_id']} (turns: {s["turn_count"]}, updated: {s["updated_at"]})")
+                console.print(
+                    f"  {s['session_id']} (turns: {s["turn_count"]}, updated: {s["updated_at"]})"
+                )
         elif cmd_name == "/resume":
             # Resume a session
             if not cmd_args:
                 console.print(f"[error]Usage: /resume <session_id>[/error]")
-            persistence_manager = PersistenceManager()
+            else:
+                persistence_manager = PersistenceManager()
+                snapshot = persistence_manager.load_session(cmd_args)
+                if not snapshot:
+                    console.print(f"[error]Session {cmd_args} does not exist.[/error]")
+                else:
+                    session = Session(
+                        config=self.config,
+                    )
+                    session.created_at = (snapshot.created_at,)
+                    session.updated_at = (snapshot.updated_at,)
+                    session.turn_count = (snapshot.turn_count,)
+                    session.context_manager.total_usage = snapshot.total_usage
+
+                    for msg in snapshot.messages:
+                        if msg.get("role") == "system":
+                            continue
+                        elif msg["role"] == "user":
+                            session.context_manager.add_user_message(
+                                msg.get("content", "")
+                            )
+                        elif msg["role"] == "assistant":
+                            session.context_manager.add_assistant_message(
+                                msg.get("content", ""), msg.get("tool_calls")
+                            )
+                        elif msg["role"] == "tool":
+                            session.context_manager.add_tool_result(
+                                msg.get("tool_call_id", ""), msg.get("content", "")
+                            )
+                    # Close the current session
+                    await self.agent.session.client.close()
+                    await self.agent.session.mcp_manager.close()
+                    await session.initialize()
+                    self.agent.session = session
+                    console.print(f"[success]Resumed session: {session.session_id}[/success]")
+
         elif cmd_name == "/restore":
             # Restore a previous checkpoint
             pass
         else:
-            console.print(f'[error]Unknown command: {cmd_name}[/error]')
+            console.print(f"[error]Unknown command: {cmd_name}[/error]")
 
         return True
 
