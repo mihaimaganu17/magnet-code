@@ -217,6 +217,8 @@ class CLI:
                 status = server['status']
                 status_color = "green" if status == "connected" else "red"
                 console.print(f"  🔵 {server['name']}: [{status_color}]{status}[/{status_color}] ({server['tools']} tools)")
+        elif cmd_name == '/save':
+            pass
         else:
             console.print(f'[error]Unknown command: {cmd_name}[/error]')
 
