@@ -230,10 +230,10 @@ class CLI:
             )
             persistence_manager.save_session(session_snapshot)
             console.print(f'[success]Session saved: {self.agent.session.session_id}[/success]')
-        elif cmd_name == '/sesssions':
+        elif cmd_name == '/sessions':
             persistence_manager = PersistenceManager()
             sessions = persistence_manager.list_sessions()
-            console.print(f"\n[bold]Save sessions ({len(sessions)})[/bold]")
+            console.print(f"\n[bold]Saved sessions ({len(sessions)})[/bold]")
             for s in sessions:
                 console.print(f"  {s['session_id']} (turns: {s["turn_count"]}, updated: {s["updated_at"]})")
         else:

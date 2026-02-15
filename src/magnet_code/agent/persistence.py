@@ -64,5 +64,5 @@ class PersistenceManager:
                 "turn_count": data["turn_count"],
             })
 
-        sessions.sort(key=lambda x: x['udpated_at'], revers=True)
+        sessions.sort(key=lambda x: x['updated_at'], reverse=True)
         return sessions
